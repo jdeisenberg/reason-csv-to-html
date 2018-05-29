@@ -4,7 +4,7 @@ Recently, [@bsansouci](https://github.com/bsansouci) organized a ReasonML dojo t
 
 ![screenshot showing spreadsheet with horizontal scrolling](google_doc_screenshot.png)
 
-The problem is that you have to scroll horizontally to read the spreadsheet, making it difficult to get a good picture of the data. I decided to [export the spreadsheet as CSV](feedback.csv), then write a program in ReasonML to convert the CSV to a [somewhat more readable HTML form](europe_dojo_feedback.html). You can see the repository at [https://github.com/jdeisenberg/dojo-comments](https://github.com/jdeisenberg/dojo-comments). I learned a lot of things writing this, and I’ll share them with you here.
+The problem is that you have to scroll horizontally to read the spreadsheet, making it difficult to get a good picture of the data. I decided to [export the spreadsheet as CSV](feedback.csv), then write a program in ReasonML to convert the CSV to a [somewhat more readable HTML format](europe_dojo_feedback.html). You can see the repository at [https://github.com/jdeisenberg/dojo-comments](https://github.com/jdeisenberg/dojo-comments). I learned a lot of things writing this, and I’ll share them with you here.
 
 ## The Big Picture
 
