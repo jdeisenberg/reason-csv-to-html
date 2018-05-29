@@ -11,7 +11,7 @@ The problem is that you have to scroll horizontally to read the spreadsheet, mak
 Here’s my plan for the program, which I run from the command line as follows:
 
 ```txt
-node src/DojoComments.bs.js inputfile.csv outputfile.html
+node src/CsvToHtml.bs.js inputfile.csv outputfile.html
 ```
 
 * Get the input and output file names from the command line
