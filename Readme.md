@@ -177,7 +177,7 @@ let processCell = (s: string) : string => {
 ```
 
 > I have fully annotated the parameter and return types for `processCell()`. You will normally not see ReasonML programmers doing this; they will let ReasonML’s type inference engine do the work for them. So why am I doing this extra work?
-> I have, for many years, taught beginning programming courses. Sometimes, I am in the middle of explaining some program that I am live coding, and I stop and tell the class, “I am not explaining how I am writing this to convince you. I’m doing it to convince *me*. And that’s why I am fully annotating the types for all my functions: to convince myself that I know exactly what kind of data is coming into and going out of my functions. Your Mileage May Vary.  
+> I have, for many years, taught beginning programming courses. Sometimes, I am in the middle of explaining some program that I am live coding, and I stop and tell the class, “I am not explaining how I am writing this to convince you. I’m doing it to convince *me*.” And that’s why I am fully annotating the types for all my functions: to convince myself that I know exactly what kind of data is coming into and going out of my functions. Your Mileage May Vary.  
 
 Now I can create a definition list from an array of headers and a row’s worth of cells. I could use `Belt.Array.Reduce`, but it seemed easier to use a recursive helper function to accumulate a string `acc` from cell index `n`:
 
