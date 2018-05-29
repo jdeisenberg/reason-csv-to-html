@@ -48,19 +48,7 @@
 <a href="#the-big-picture" id="the-big-picture"><h2>The Big Picture</h2></a>
 
 <p>Here’s my plan for the program, which I run from the command line as follows:</p>
-<div class='code-block' data-block-syntax="re">
-  
-  <pre class='code' data-block-id='11' id='block-11'><code>node src/DojoComments.bs.js inputfile.csv outputfile.html</code></pre>
-  
-  
-  
-</div><div class='code-block' data-block-syntax="ml">
-  
-  <pre class='code' data-block-id='11-alt' id='block-11-alt'><code>This code was skipped</code></pre>
-  
-  
-  
-</div>
+<pre class='code-txt txt'><code class='txt'>node src/DojoComments.bs.js inputfile.csv outputfile.html</code></pre>
 
 <ul><li>Get the input and output file names from the command line</li><li>Read the input CSV file as one large string</li><li>Parse the CSV</li><li>Separate the first (header) row from the remaining rows</li><li>For each row, create a string that has a definition list <code>&lt;dl&gt;</code> with the heading for each column as the <code>&lt;dt&gt;</code> and the contents of the cell as the <code>&lt;dt&gt;</code>.</li><li>Join these strings with <code>&lt;hr /&gt;</code> elements (to make them easier to read when displayed).</li><li>Sandwich the resulting string between an <code>&lt;html&gt;...</code> and <code>&lt;/html&gt;</code></li><li>Write to the output file</li></ul>
 
@@ -328,8 +316,7 @@ let <span class='pattern-ident' data-type="array(array(string))">parseData</span
   
 </div>
 
-<p>Note the function call <code>Results.data(...)</code> in the last line. When you created the <code>Results.t</code> data type, ReasonML created <em>getter</em> and <em>setter</em> functions to allow you to read and write fields in the JavaScript object, so <code>Results.data(...)</code> gives back the <code>data</code> field in the result of <code>parse(allLines)</code>.</p>
-<p>```</p>
+<p>Note the function call <code>Results.data(...)</code> in the last line. When you created the <code>Results.t</code> data type, ReasonML created <em>getter</em> and <em>setter</em> functions to allow you to read and write fields in the JavaScript object, so <code>Results.data(...)</code> gives back the <code>data</code> field from the return value of <code>parse(allLines)</code>.</p>
 <p><code>parseData</code> is an array of array of string. For example, the first part of CSV file might parse into something like this (just a segment to give you the idea):</p>
 <pre class='code-txt txt'><code class='txt'>[|
   [|&quot;Timestamp&quot;, &quot;Which dojo did you attend?&quot;, &quot;Any previous programming experience&quot;...|],

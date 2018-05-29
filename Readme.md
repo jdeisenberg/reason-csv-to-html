@@ -10,7 +10,7 @@ The problem is that you have to scroll horizontally to read the spreadsheet, mak
 
 Here’s my plan for the program, which I run from the command line as follows:
 
-```
+```txt
 node src/DojoComments.bs.js inputfile.csv outputfile.html
 ```
 
@@ -125,9 +125,7 @@ Now I used this to parse the CSV file and get the `data` object from the result 
 let parseData = Results.data(parse(allLines));
 ```
 
-Note the function call `Results.data(...)` in the last line. When you created the `Results.t` data type, ReasonML created *getter* and *setter* functions to allow you to read and write fields in the JavaScript object, so `Results.data(...)` gives back the `data` field in the result of `parse(allLines)`.
-
-```
+Note the function call `Results.data(...)` in the last line. When you created the `Results.t` data type, ReasonML created *getter* and *setter* functions to allow you to read and write fields in the JavaScript object, so `Results.data(...)` gives back the `data` field from the return value of `parse(allLines)`.
 
 `parseData` is an array of array of string. For example, the first part of CSV file might parse into something like this (just a segment to give you the idea):
 
