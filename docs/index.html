@@ -1,0 +1,116 @@
+
+    
+<!doctype html>
+<meta charset=utf8>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel=stylesheet href='./styles.css'>
+<script defer src='./script.js'></script>
+<title>Home</title>
+<body>
+<script>window.relativeToRoot="./"</script>
+<script defer src="./block-script.js"></script>
+<div id='error-message'>
+  ⚠️ Oops! This page doesn't appear to define a <span>type</span> called <code>_</code>.
+</div>
+
+    
+    <div class='container'>
+    
+    <div class='sidebar-wrapper'>
+    <div class='sidebar-expander'>Show navigation</div>
+    <div class='sidebar'>
+      <a href="./search.html" style="display: block; padding: 0 8px;">Search</a>
+      
+      <div class='docs-listing'><a href="./index.html">Home</a></div>
+      <div class='toc-header'>Page Contents</div>
+      <div class='table-of-contents'>
+      <a href="#converting-csv-to-html" class='level-1 header'>Converting CSV to HTML</a>
+<a href="#the-big-picture" class='level-2 header'>The Big Picture</a>
+<a href="#reading-command-line-arguments" class='level-2 header'>Reading Command Line Arguments</a>
+<a href="#reading-and-writing-files" class='level-2 header'>Reading and Writing Files</a>
+      </div>
+      <div class='project-title'>Package modules</div><div class='project-listing'><a href="./api/DojoComments.html">DojoComments</a>
+<a href="./api/DojoComments.html">DojoComments</a></div>
+    </div>
+    </div>
+  
+    <div class='main'>
+    
+    <a href="#converting-csv-to-html" id="converting-csv-to-html"><h1>Converting CSV to HTML</h1></a>
+
+<p>Recently, <a href="https://github.com/bsansouci" target="_blank" rel="noopener nofollow" title="" class="external-link">@bsansouci</a> organized a ReasonML dojo that was held simultaneously in several locations in Europe. He provided a feedback form for attendees, and put the results in a Google document, which looks like this:</p>
+<p><img src='google_doc_screenshot.png' alt='screenshot showing spreadsheet with horizontal scrolling' /></p>
+<p>The problem is that you have to scroll horizontally to read the spreadsheet, and it’s not pleasant to read in any event. I decided to <a href="/home/david/reasonlab/dojo-comments/docs/feedback.csv" title="">export the spreadsheet as CSV</a>, then write a program in ReasonML to convert the CSV to a <a href="/home/david/reasonlab/dojo-comments/docs/europe_dojo_feedback.html" title="">somewhat more readable HTML form</a>. I learned a lot of things writing this, and I’ll share them with you here.</p>
+<a href="#the-big-picture" id="the-big-picture"><h2>The Big Picture</h2></a>
+
+<p>Here’s my plan for the program, which I run from the command line as follows:</p>
+<div class='code-block' data-block-syntax="re">
+  
+  <pre class='code' data-block-id='2' id='block-2'><code>node src/DojoComments.bs.js inputfile.csv outputfile.html</code></pre>
+  
+  
+  
+</div><div class='code-block' data-block-syntax="ml">
+  
+  <pre class='code' data-block-id='2-alt' id='block-2-alt'><code>This code was skipped</code></pre>
+  
+  
+  
+</div>
+
+<ul><li>Get the input and output file names from the command line</li><li>Read the input CSV file as one large string</li><li>Parse the CSV</li><li>Separate the first (header) row from the remaining rows</li><li>For each row, create a string that has a definition list <code>&lt;dl&gt;</code> with the heading for each column as the <code>&lt;dt&gt;</code> and the contents of the cell as the <code>&lt;dt&gt;</code>.</li><li>Join these strings with <code>&lt;hr /&gt;</code> elements (to make them easier to read when displayed).</li><li>Sandwich the resulting string between an <code>&lt;html&gt;...</code> and <code>&lt;/html&gt;</code></li><li>Write to the output file</li></ul>
+
+<a href="#reading-command-line-arguments" id="reading-command-line-arguments"><h2>Reading Command Line Arguments</h2></a>
+
+<p>Looking at the documentation for <a href="https://nodejs.org/docs/latest/api/process.html#process_process_argv" target="_blank" rel="noopener nofollow" title="" class="external-link"><code>Node.process.argv</code></a> lets me read an array of  command line arguments. The last element is the output file name, and the next to last is the input file name. Current best practice in ReasonML is to use the <code>Belt.Array</code> module to manipulate arrays. I suspected I would be doing a lot of calls to functions from that module, and I didn’t want to type <code>Belt.Array</code> all the time, so I used a module alias at the top of my code:</p>
+<div class='code-block' data-block-syntax="re">
+  
+  <pre class='code' data-block-id='1' id='block-1'><code>module Arr = Belt.Array;
+/* ... */
+let <span class='pattern-ident' data-type="array(string)">args</span> = <span class='ident' data-type="array(string)">Node.Process.argv</span>;
+let <span class='pattern-ident' data-type="string">outFile</span> = <span class='ident' data-type="(array(string), int) => string">Arr.getUnsafe</span>(<span class='ident' data-type="array(string)">args</span>, <span class='ident' data-type="array(string) => int">Arr.length</span>(<span class='ident' data-type="array(string)">args</span>) <span class='operator' data-type="(int, int) => int">-</span> <span class='int' data-type="int">1</span>);
+let <span class='pattern-ident' data-type="string">inFile</span> = <span class='ident' data-type="(array(string), int) => string">Arr.getUnsafe</span>(<span class='ident' data-type="array(string)">args</span>, <span class='ident' data-type="array(string) => int">Arr.length</span>(<span class='ident' data-type="array(string)">args</span>) <span class='operator' data-type="(int, int) => int">-</span> <span class='int' data-type="int">2</span>);</code></pre>
+  
+  
+  
+</div><div class='code-block' data-block-syntax="ml">
+  
+  <pre class='code' data-block-id='1-alt' id='block-1-alt'><code>[@@@ocaml.ppx.context { cookies = [] }]
+module Arr = Belt.Array
+let <span class='pattern-ident' data-type="array(string)">args</span> = <span class='ident' data-type="array(string)">Node.Process.argv</span>
+let <span class='pattern-ident' data-type="string">outFile</span> = <span class='ident' data-type="(array(string), int) => string">Arr.getUnsafe</span> <span class='ident' data-type="array(string)">args</span> ((<span class='ident' data-type="array(string) => int">Arr.length</span> <span class='ident' data-type="array(string)">args</span>) <span class='operator' data-type="(int, int) => int">-</span> <span class='int' data-type="int">1</span>)
+let <span class='pattern-ident' data-type="string">inFile</span> = <span class='ident' data-type="(array(string), int) => string">Arr.getUnsafe</span> <span class='ident' data-type="array(string)">args</span> ((<span class='ident' data-type="array(string) => int">Arr.length</span> <span class='ident' data-type="array(string)">args</span>) <span class='operator' data-type="(int, int) => int">-</span> <span class='int' data-type="int">2</span>)</code></pre>
+  
+  
+  
+</div>
+
+<p>This is where (not for the first time during this program) I got lazy. <code>Belt.Array.get()</code> returns <code>option</code> type, and I really didn’t want to deal with that, so I went with <code>getUnsafe()</code>, which means that if you don’t provide enough arguments to the program, it will crash.</p>
+<a href="#reading-and-writing-files" id="reading-and-writing-files"><h2>Reading and Writing Files</h2></a>
+
+<p>ReasonML has an interface to Node’s file system, written in BuckleScript. From <a href="https://bucklescript.github.io/bucklescript/api/Node.Fs.html" target="_blank" rel="noopener nofollow" title="" class="external-link">the documentation</a> I was able to find the <code>readFileAsUtf8Sync()</code> function, which reads the entire file in as a single string. This would not be a good thing to use if I had an enormous, multi-gigabyte CSV file, but for a file the size that I was dealing with, it will do. It’s a synchronous call, so I don’t have to deal with callbacks. When the program finishes, I’ll use the corresponding <code>writeFileAsUtf8Sync()</code> to do my output.</p>
+<div class='code-block' data-block-syntax="re">
+  
+  <pre class='code' data-block-id='0' id='block-0'><code>let <span class='pattern-ident' data-type="string">allLines</span> = <span class='ident' data-type="string => string">Node.Fs.readFileAsUtf8Sync</span>(<span class='ident' data-type="string">inFile</span>);</code></pre>
+  
+  
+  
+</div><div class='code-block' data-block-syntax="ml">
+  
+  <pre class='code' data-block-id='0-alt' id='block-0-alt'><code>[@@@ocaml.ppx.context { cookies = [] }]
+module Arr = Belt.Array
+let <span class='pattern-ident' data-type="array(string)">args</span> = <span class='ident' data-type="array(string)">Node.Process.argv</span>
+let <span class='pattern-ident' data-type="string">outFile</span> = <span class='ident' data-type="(array(string), int) => string">Arr.getUnsafe</span> <span class='ident' data-type="array(string)">args</span> ((<span class='ident' data-type="array(string) => int">Arr.length</span> <span class='ident' data-type="array(string)">args</span>) <span class='operator' data-type="(int, int) => int">-</span> <span class='int' data-type="int">1</span>)
+let <span class='pattern-ident' data-type="string">inFile</span> = <span class='ident' data-type="(array(string), int) => string">Arr.getUnsafe</span> <span class='ident' data-type="array(string)">args</span> ((<span class='ident' data-type="array(string) => int">Arr.length</span> <span class='ident' data-type="array(string)">args</span>) <span class='operator' data-type="(int, int) => int">-</span> <span class='int' data-type="int">2</span>)
+let <span class='pattern-ident' data-type="string">allLines</span> = <span class='ident' data-type="string => string">Node.Fs.readFileAsUtf8Sync</span> <span class='ident' data-type="string">inFile</span></code></pre>
+  
+  
+  
+</div>
+
+<p>In that last line, I don’t care about the return value from the <code>writeFileAsUtf8Sync</code>, so I bind it to <code>_</code>, which means it gets ignored.</p>
+
+    </div>
+    <div class='right-blank'></div>
+    </div>
+  
