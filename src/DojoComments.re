@@ -33,24 +33,12 @@ module Results = {
 [@bs.val] [@bs.module "papaparse"] external parse :
   (string) => Results.t = "parse";
 
-let arraySplitAt = (n:int, items: array('a)) : (array('a), array('a)) => {
-  (Js.Array.slice(~start=0, ~end_=n, items),
-    Js.Array.slice(~start=n, ~end_=Js.Array.length(items), items))
-};
-
-let escapeHTML = (s: string) : string => {
-  s |. Js.String.replaceByRe([%re "/\\&/g"], "&amp;", _) |.
+let processCell = (s: string) : string => {
+  s |.
+  Js.String.replaceByRe([%re "/\\&/g"], "&amp;", _) |.
   Js.String.replaceByRe([%re "/</g"], "&lt;", _) |.
-  Js.String.replaceByRe([%re "/>/g"], "&gt;", _);
-};
-
-/*
- * Make each \n in the string a new <div>. Also escape HTML.
- */
-let processText = (s: string) : string => {
-  let lines = Js.String.split("\n", s);
-  Arr.map(lines, escapeHTML) |.
-    Js.Array.joinWith("</div><div>", _);
+  Js.String.replaceByRe([%re "/>/g"], "&gt;", _) |.
+  Js.String.replaceByRe([%re "/\\n/g"], "</div><div>", _);
 };
 
 /* Given an array of headers and an array of data,
@@ -62,9 +50,10 @@ let createDefnList = (headers: array(string), cells: array(string)) : string => 
       acc
     } else {
       helper(acc ++ "<dt>" ++ headers[n] ++ "</dt>\n<dd><div>"
-        ++ processText(cells[n]) ++ "</div></dd>\n", n + 1) ;
+        ++ processCell(cells[n]) ++ "</div></dd>\n", n + 1) ;
     }
   };
+  
   "<dl>" ++ helper("", 0) ++ "</dl>\n\n";
 };
 
@@ -84,31 +73,11 @@ let inFile = Arr.getUnsafe(args, Arr.length(args) - 2);
 /* Read the entire CSV file as one string */
 let allLines = Node.Fs.readFileAsUtf8Sync(inFile);
 
-let htmlHeader = {js|
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Feedback from European Dojo</title>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <style type="text/css">
-  body {font-family: helvetica, arial, sans-serif; }
-  dl {
-    margin: 0.5em 0;
-  }
-  dt { color: #666; }
-  dd { margin-bottom: 0.5em; }
-  </style>
-</head>
-<body>
-|js};
-
 /* Parse the CSV  string  */
 let parseData = Results.data(parse(allLines));
 
-/* Split it into two array(array(string)) */
-
-let (headersNested, commentary) = arraySplitAt(1, parseData);
-let headers = Arr.getUnsafe(headersNested,0);
+let headers = Arr.slice(parseData, ~offset=0, ~len=1) |. Arr.getUnsafe(_,0);
+let contentRows = Arr.slice(parseData, ~offset=1, ~len=Arr.length(parseData) - 1);
 
 let htmlHeader = {js|
 <!DOCTYPE html>
@@ -128,7 +97,7 @@ let htmlHeader = {js|
 <body>
 |js};
 
-let htmlString = (htmlHeader ++ processRows(headers, commentary) ++
+let htmlString = (htmlHeader ++ processRows(headers, contentRows) ++
   {js|</body>\n</html>|js});
 
 let _ = Node.Fs.writeFileAsUtf8Sync(outFile, htmlString);

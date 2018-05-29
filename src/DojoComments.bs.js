@@ -13,22 +13,11 @@ var Meta = /* module */[];
 
 var Results = /* module */[];
 
-function arraySplitAt(n, items) {
-  return /* tuple */[
-          items.slice(0, n),
-          items.slice(n, items.length)
-        ];
-}
-
-function escapeHTML(s) {
+function processCell(s) {
   var __x = s.replace((/\&/g), "&amp;");
   var __x$1 = __x.replace((/</g), "&lt;");
-  return __x$1.replace((/>/g), "&gt;");
-}
-
-function processText(s) {
-  var lines = s.split("\n");
-  return Belt_Array.map(lines, escapeHTML).join("</div><div>");
+  var __x$2 = __x$1.replace((/>/g), "&gt;");
+  return __x$2.replace((/\n/g), "</div><div>");
 }
 
 function createDefnList(headers, cells) {
@@ -40,7 +29,7 @@ function createDefnList(headers, cells) {
         return acc;
       } else {
         _n = n + 1 | 0;
-        _acc = acc + ("<dt>" + (Caml_array.caml_array_get(headers, n) + ("</dt>\n<dd><div>" + (processText(Caml_array.caml_array_get(cells, n)) + "</div></dd>\n"))));
+        _acc = acc + ("<dt>" + (Caml_array.caml_array_get(headers, n) + ("</dt>\n<dd><div>" + (processCell(Caml_array.caml_array_get(cells, n)) + "</div></dd>\n"))));
         continue ;
       }
     };
@@ -65,17 +54,13 @@ var allLines = Fs.readFileSync(inFile, "utf8");
 
 var parseData = Papaparse.parse(allLines).data;
 
-var match = arraySplitAt(1, parseData);
+var headers = Belt_Array.slice(parseData, 0, 1)[0];
 
-var commentary = match[1];
-
-var headersNested = match[0];
-
-var headers = headersNested[0];
+var contentRows = Belt_Array.slice(parseData, 1, parseData.length - 1 | 0);
 
 var htmlHeader = "\n<!DOCTYPE html>\n<html>\n<head>\n  <title>Feedback from European Dojo</title>\n  <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />\n  <style type=\"text/css\">\n  body {font-family: helvetica, arial, sans-serif; }\n  dl {\n    margin: 0.5em 0;\n  }\n  dt { color: #666; }\n  dd { margin-bottom: 0.5em; }\n  </style>\n</head>\n<body>\n";
 
-var htmlString = htmlHeader + (processRows(headers, commentary) + "</body>\n</html>");
+var htmlString = htmlHeader + (processRows(headers, contentRows) + "</body>\n</html>");
 
 Fs.writeFileSync(outFile, htmlString, "utf8");
 
@@ -85,9 +70,7 @@ exports.Arr = Arr;
 exports.$$Error = $$Error;
 exports.Meta = Meta;
 exports.Results = Results;
-exports.arraySplitAt = arraySplitAt;
-exports.escapeHTML = escapeHTML;
-exports.processText = processText;
+exports.processCell = processCell;
 exports.createDefnList = createDefnList;
 exports.processRows = processRows;
 exports.args = args;
@@ -95,9 +78,8 @@ exports.outFile = outFile;
 exports.inFile = inFile;
 exports.allLines = allLines;
 exports.parseData = parseData;
-exports.headersNested = headersNested;
-exports.commentary = commentary;
 exports.headers = headers;
+exports.contentRows = contentRows;
 exports.htmlHeader = htmlHeader;
 exports.htmlString = htmlString;
 /* args Not a pure module */
