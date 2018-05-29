@@ -1,0 +1,227 @@
+
+    
+<!doctype html>
+<meta charset=utf8>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel=stylesheet href='../styles.css'>
+<script defer src='../script.js'></script>
+<title>CsvToHtml</title>
+<body>
+<script>window.relativeToRoot=".."</script>
+<script defer src="../block-script.js"></script>
+<div id='error-message'>
+  ⚠️ Oops! This page doesn't appear to define a <span>type</span> called <code>_</code>.
+</div>
+
+    <script>window.shouldCheckHashes=true</script>
+    <div class='container'>
+    
+    <div class='sidebar-wrapper'>
+    <div class='sidebar-expander'>Show navigation</div>
+    <div class='sidebar'>
+      <a href="../search.html" style="display: block; padding: 0 8px;">Search</a>
+      
+      <div class='docs-listing'><a href="../index.html">Home</a></div>
+      <div class='toc-header'>Page Contents</div>
+      <div class='table-of-contents'>
+      <a href="#CsvToHtml" class='level-1 header'>CsvToHtml</a>
+<a href="#module-Error" class='level-2 module'>Error</a>
+<a href="#type-Error.t" class='level-3 type'>t</a>
+<a href="#value-Error.t" class='level-3 value'>t</a>
+<a href="#value-Error.type_" class='level-3 value'>type_</a>
+<a href="#value-Error.code" class='level-3 value'>code</a>
+<a href="#value-Error.message" class='level-3 value'>message</a>
+<a href="#value-Error.row" class='level-3 value'>row</a>
+<a href="#module-Meta" class='level-2 module'>Meta</a>
+<a href="#type-Meta.t" class='level-3 type'>t</a>
+<a href="#value-Meta.t" class='level-3 value'>t</a>
+<a href="#value-Meta.delimiter" class='level-3 value'>delimiter</a>
+<a href="#value-Meta.linebreak" class='level-3 value'>linebreak</a>
+<a href="#value-Meta.aborted" class='level-3 value'>aborted</a>
+<a href="#value-Meta.fields" class='level-3 value'>fields</a>
+<a href="#value-Meta.truncated" class='level-3 value'>truncated</a>
+<a href="#module-Results" class='level-2 module'>Results</a>
+<a href="#type-Results.t" class='level-3 type'>t</a>
+<a href="#value-Results.t" class='level-3 value'>t</a>
+<a href="#value-Results.data" class='level-3 value'>data</a>
+<a href="#value-Results.error" class='level-3 value'>error</a>
+<a href="#value-Results.meta" class='level-3 value'>meta</a>
+<a href="#value-parse" class='level-2 value'>parse</a>
+<a href="#value-processCell" class='level-2 value'>processCell</a>
+<a href="#value-createDefnList" class='level-2 value'>createDefnList</a>
+<a href="#value-processRows" class='level-2 value'>processRows</a>
+<a href="#value-args" class='level-2 value'>args</a>
+<a href="#value-outFile" class='level-2 value'>outFile</a>
+<a href="#value-inFile" class='level-2 value'>inFile</a>
+<a href="#value-allLines" class='level-2 value'>allLines</a>
+<a href="#value-parseData" class='level-2 value'>parseData</a>
+<a href="#value-headers" class='level-2 value'>headers</a>
+<a href="#value-contentRows" class='level-2 value'>contentRows</a>
+<a href="#value-htmlHeader" class='level-2 value'>htmlHeader</a>
+<a href="#value-htmlString" class='level-2 value'>htmlString</a>
+      </div>
+      <div class='project-title'>Package modules</div><div class='project-listing'><a href="CsvToHtml.html">CsvToHtml</a>
+<a href="CsvToHtml.html">CsvToHtml</a></div>
+    </div>
+    </div>
+  
+    <div class='main'>
+    
+    <a href="#CsvToHtml" id="CsvToHtml"><h1>CsvToHtml</h1></a>
+
+<p><span class='missing'>This module does not have a toplevel documentation block.</span></p>
+<div class='doc-item'><h4 class='item module'>module <a href="#module-Error" id="module-Error">Error</a></h4><div class='body module-body'><p><span class='missing'>This module does not have a toplevel documentation block.</span></p>
+<div class='doc-item'><h4 class='item module'>include </h4><div class='body module-body include-body'><div class='doc-item'><h4 class='item'>type <a href="#type-Error.t" id="type-Error.t">t</a></h4>
+
+<div class='body body-empty'></div></div>
+
+<div class='doc-item'><h4 class='item'>let <a href="#value-Error.t" id="value-Error.t">t</a>: (
+  ~type_: string,
+  ~code: string,
+  ~message: string,
+  ~row: int
+) => <a href="#type-Error.t">t</a></h4>
+
+<div class='body body-empty'></div></div>
+
+<div class='doc-item'><h4 class='item'>let <a href="#value-Error.type_" id="value-Error.type_">type_</a>: <a href="#type-Error.t">t</a> => string</h4>
+
+<div class='body body-empty'></div></div>
+
+<div class='doc-item'><h4 class='item'>let <a href="#value-Error.code" id="value-Error.code">code</a>: <a href="#type-Error.t">t</a> => string</h4>
+
+<div class='body body-empty'></div></div>
+
+<div class='doc-item'><h4 class='item'>let <a href="#value-Error.message" id="value-Error.message">message</a>: <a href="#type-Error.t">t</a> => string</h4>
+
+<div class='body body-empty'></div></div>
+
+<div class='doc-item'><h4 class='item'>let <a href="#value-Error.row" id="value-Error.row">row</a>: <a href="#type-Error.t">t</a> => int</h4>
+
+<div class='body body-empty'></div></div>
+</div></div>
+</div></div>
+
+<div class='doc-item'><h4 class='item module'>module <a href="#module-Meta" id="module-Meta">Meta</a></h4><div class='body module-body'><p><span class='missing'>This module does not have a toplevel documentation block.</span></p>
+<div class='doc-item'><h4 class='item module'>include </h4><div class='body module-body include-body'><div class='doc-item'><h4 class='item'>type <a href="#type-Meta.t" id="type-Meta.t">t</a></h4>
+
+<div class='body body-empty'></div></div>
+
+<div class='doc-item'><h4 class='item'>let <a href="#value-Meta.t" id="value-Meta.t">t</a>: (
+  ~delimiter: string,
+  ~linebreak: string,
+  ~aborted: bool,
+  ~fields: array(string),
+  ~truncated: bool
+) => <a href="#type-Meta.t">t</a></h4>
+
+<div class='body body-empty'></div></div>
+
+<div class='doc-item'><h4 class='item'>let <a href="#value-Meta.delimiter" id="value-Meta.delimiter">delimiter</a>: <a href="#type-Meta.t">t</a> => string</h4>
+
+<div class='body body-empty'></div></div>
+
+<div class='doc-item'><h4 class='item'>let <a href="#value-Meta.linebreak" id="value-Meta.linebreak">linebreak</a>: <a href="#type-Meta.t">t</a> => string</h4>
+
+<div class='body body-empty'></div></div>
+
+<div class='doc-item'><h4 class='item'>let <a href="#value-Meta.aborted" id="value-Meta.aborted">aborted</a>: <a href="#type-Meta.t">t</a> => bool</h4>
+
+<div class='body body-empty'></div></div>
+
+<div class='doc-item'><h4 class='item'>let <a href="#value-Meta.fields" id="value-Meta.fields">fields</a>: <a href="#type-Meta.t">t</a> => array(string)</h4>
+
+<div class='body body-empty'></div></div>
+
+<div class='doc-item'><h4 class='item'>let <a href="#value-Meta.truncated" id="value-Meta.truncated">truncated</a>: <a href="#type-Meta.t">t</a> => bool</h4>
+
+<div class='body body-empty'></div></div>
+</div></div>
+</div></div>
+
+<div class='doc-item'><h4 class='item module'>module <a href="#module-Results" id="module-Results">Results</a></h4><div class='body module-body'><p><span class='missing'>This module does not have a toplevel documentation block.</span></p>
+<div class='doc-item'><h4 class='item module'>include </h4><div class='body module-body include-body'><div class='doc-item'><h4 class='item'>type <a href="#type-Results.t" id="type-Results.t">t</a></h4>
+
+<div class='body body-empty'></div></div>
+
+<div class='doc-item'><h4 class='item'>let <a href="#value-Results.t" id="value-Results.t">t</a>: (
+  ~data: array(array(string)),
+  ~error: array(<a href="#module-Error">Error</a>.<a href="#type-Error.t">t</a>),
+  ~meta: <a href="#module-Meta">Meta</a>.<a href="#type-Meta.t">t</a>
+) => <a href="#type-Results.t">t</a></h4>
+
+<div class='body body-empty'></div></div>
+
+<div class='doc-item'><h4 class='item'>let <a href="#value-Results.data" id="value-Results.data">data</a>: <a href="#type-Results.t">t</a> => array(array(string))</h4>
+
+<div class='body body-empty'></div></div>
+
+<div class='doc-item'><h4 class='item'>let <a href="#value-Results.error" id="value-Results.error">error</a>: <a href="#type-Results.t">t</a> => array(<a href="#module-Error">Error</a>.<a href="#type-Error.t">t</a>)</h4>
+
+<div class='body body-empty'></div></div>
+
+<div class='doc-item'><h4 class='item'>let <a href="#value-Results.meta" id="value-Results.meta">meta</a>: <a href="#type-Results.t">t</a> => <a href="#module-Meta">Meta</a>.<a href="#type-Meta.t">t</a></h4>
+
+<div class='body body-empty'></div></div>
+</div></div>
+</div></div>
+
+<div class='doc-item'><h4 class='item'>let <a href="#value-parse" id="value-parse">parse</a>: string => <a href="#module-Results">Results</a>.<a href="#type-Results.t">t</a></h4>
+
+<div class='body body-empty'></div></div>
+
+<div class='doc-item'><h4 class='item'>let <a href="#value-processCell" id="value-processCell">processCell</a>: string => string</h4>
+
+<div class='body body-empty'></div></div>
+
+<div class='doc-item'><h4 class='item'>let <a href="#value-createDefnList" id="value-createDefnList">createDefnList</a>: (array(string), array(string)) => string</h4>
+
+<div class='body body-empty'></div></div>
+
+<div class='doc-item'><h4 class='item'>let <a href="#value-processRows" id="value-processRows">processRows</a>: (
+  array(string),
+  array(array(string))
+) => string</h4>
+
+<div class='body body-empty'></div></div>
+
+<div class='doc-item'><h4 class='item'>let <a href="#value-args" id="value-args">args</a>: array(string)</h4>
+
+<div class='body body-empty'></div></div>
+
+<div class='doc-item'><h4 class='item'>let <a href="#value-outFile" id="value-outFile">outFile</a>: string</h4>
+
+<div class='body body-empty'></div></div>
+
+<div class='doc-item'><h4 class='item'>let <a href="#value-inFile" id="value-inFile">inFile</a>: string</h4>
+
+<div class='body body-empty'></div></div>
+
+<div class='doc-item'><h4 class='item'>let <a href="#value-allLines" id="value-allLines">allLines</a>: string</h4>
+
+<div class='body body-empty'></div></div>
+
+<div class='doc-item'><h4 class='item'>let <a href="#value-parseData" id="value-parseData">parseData</a>: array(array(string))</h4>
+
+<div class='body body-empty'></div></div>
+
+<div class='doc-item'><h4 class='item'>let <a href="#value-headers" id="value-headers">headers</a>: array(string)</h4>
+
+<div class='body body-empty'></div></div>
+
+<div class='doc-item'><h4 class='item'>let <a href="#value-contentRows" id="value-contentRows">contentRows</a>: array(array(string))</h4>
+
+<div class='body body-empty'></div></div>
+
+<div class='doc-item'><h4 class='item'>let <a href="#value-htmlHeader" id="value-htmlHeader">htmlHeader</a>: string</h4>
+
+<div class='body body-empty'></div></div>
+
+<div class='doc-item'><h4 class='item'>let <a href="#value-htmlString" id="value-htmlString">htmlString</a>: string</h4>
+
+<div class='body body-empty'></div></div>
+
+    </div>
+    <div class='right-blank'></div>
+    </div>
+  
