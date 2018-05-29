@@ -217,7 +217,7 @@ When `processRows()` is finished, it will return one very long string that consi
 
 ## Finishing the Task
 
-To wrap everything up, I sandwiched the `processRows()` call between strings that provide the HTML header and ending tags, and then used `writeFileAsUtf8Sync()` to send that to the output file:
+To wrap everything up, I sandwiched the `processRows()` call between strings that provide the HTML header and ending tags, and then used `writeFileAsUtf8Sync()` to send that to the output file. The `{js|...|js}` notation lets you have multi-line strings in ReasonML. You also use this notation if you have non-ASCII characters in your strings.
 
 ```txt
 let htmlHeader = {js|

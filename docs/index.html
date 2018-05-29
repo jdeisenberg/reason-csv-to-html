@@ -604,7 +604,7 @@ let <span class='pattern-ident' data-type="(array(string), array(array(string)))
 <p>When <code>processRows()</code> is finished, it will return one very long string that consists of <code>&lt;dl&gt;..&lt;/dl&gt;&lt;hr/&gt;</code>s, one for every row in the CSV file.</p>
 <a href="#finishing-the-task" id="finishing-the-task"><h2>Finishing the Task</h2></a>
 
-<p>To wrap everything up, I sandwiched the <code>processRows()</code> call between strings that provide the HTML header and ending tags, and then used <code>writeFileAsUtf8Sync()</code> to send that to the output file:</p>
+<p>To wrap everything up, I sandwiched the <code>processRows()</code> call between strings that provide the HTML header and ending tags, and then used <code>writeFileAsUtf8Sync()</code> to send that to the output file. The <code>{js|...|js}</code> notation lets you have multi-line strings in ReasonML. You also use this notation if you have non-ASCII characters in your strings.</p>
 <pre class='code-txt txt'><code class='txt'>let htmlHeader = {js|
 &lt;!DOCTYPE html&gt;
 &lt;html&gt;
