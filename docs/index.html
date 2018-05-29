@@ -54,7 +54,28 @@
 
 <a href="#reading-command-line-arguments" id="reading-command-line-arguments"><h2>Reading Command Line Arguments</h2></a>
 
-<p>To read command line arguments, you need access to Node’s <code>process</code> global. ReasonML provides an <a href="https://bucklescript.github.io/bucklescript/api/Node_process.html" target="_blank" rel="noopener nofollow" title="" class="external-link">interface to <code>process</code></a> via BuckleScript. The <code>argv</code> variable gives me an array of command line arguments. For this program, the last element in the array is the output file name, and the next to last is the input file name. Current best practice in ReasonML is to use the <code>Belt.Array</code> module to manipulate arrays. I suspected I would be doing a lot of calls to functions from that module, and I didn’t want to type <code>Belt.Array</code> all the time, so I used a module alias at the top of my code:</p>
+<p>To read command line arguments, you need access to Node’s <code>process</code> global. ReasonML provides an <a href="https://bucklescript.github.io/bucklescript/api/Node_process.html" target="_blank" rel="noopener nofollow" title="" class="external-link">interface to <code>process</code></a> via BuckleScript. The <code>argv</code> variable gives me an array of command line arguments. For this program, the last element in the array is the output file name, and the next to last is the input file name. Current best practice in ReasonML is to use the <code>Belt.Array</code> module to manipulate arrays.</p>
+<div class='code-block' data-block-syntax="re">
+  
+  <pre class='code' data-block-id='11' id='block-11'><code>let <span class='pattern-ident' data-type="array(string)">args</span> = <span class='ident' data-type="array(string)">Node.Process.argv</span>;
+let <span class='pattern-ident' data-type="string">outFile</span> = <span class='ident' data-type="(array(string), int) => string">Belt.Array.getUnsafe</span>(<span class='ident' data-type="array(string)">args</span>, <span class='ident' data-type="array(string) => int">Belt.Array.length</span>(<span class='ident' data-type="array(string)">args</span>) <span class='operator' data-type="(int, int) => int">-</span> <span class='int' data-type="int">1</span>);
+let <span class='pattern-ident' data-type="string">inFile</span> = <span class='ident' data-type="(array(string), int) => string">Belt.Array.getUnsafe</span>(<span class='ident' data-type="array(string)">args</span>, <span class='ident' data-type="array(string) => int">Belt.Array.length</span>(<span class='ident' data-type="array(string)">args</span>) <span class='operator' data-type="(int, int) => int">-</span> <span class='int' data-type="int">2</span>);</code></pre>
+  
+  
+  
+</div><div class='code-block' data-block-syntax="ml">
+  
+  <pre class='code' data-block-id='11-alt' id='block-11-alt'><code>[@@@ocaml.ppx.context { cookies = [] }]
+let <span class='pattern-ident' data-type="array(string)">args</span> = <span class='ident' data-type="array(string)">Node.Process.argv</span>
+let <span class='pattern-ident' data-type="string">outFile</span> = <span class='ident' data-type="(array(string), int) => string">Belt.Array.getUnsafe</span> <span class='ident' data-type="array(string)">args</span> ((<span class='ident' data-type="array(string) => int">Belt.Array.length</span> <span class='ident' data-type="array(string)">args</span>) <span class='operator' data-type="(int, int) => int">-</span> <span class='int' data-type="int">1</span>)
+let <span class='pattern-ident' data-type="string">inFile</span> = <span class='ident' data-type="(array(string), int) => string">Belt.Array.getUnsafe</span> <span class='ident' data-type="array(string)">args</span> ((<span class='ident' data-type="array(string) => int">Belt.Array.length</span> <span class='ident' data-type="array(string)">args</span>) <span class='operator' data-type="(int, int) => int">-</span> <span class='int' data-type="int">2</span>)</code></pre>
+  
+  
+  
+</div>
+
+<p>This is where (not for the first time during this program) I got lazy. <code>Belt.Array.get()</code> returns <code>option</code> type, and I really didn’t want to deal with that, so I went with <code>getUnsafe()</code>, which means that if you don’t provide enough arguments to the program, it will crash.</p>
+<p>Note: If you get tired of typing <code>Belt.Array</code> repeatedly, you can use a <em>module alias</em>:</p>
 <div class='code-block' data-block-syntax="re">
   
   <pre class='code' data-block-id='10' id='block-10'><code>module Arr = Belt.Array;</code></pre>
@@ -68,44 +89,23 @@ module Arr = Belt.Array</code></pre>
   
   
   
-</div><p>and later on in the code:</p>
+</div>
+
+<a href="#reading-the-input-file" id="reading-the-input-file"><h2>Reading the Input File</h2></a>
+
+<p>ReasonML also has an <a href="https://bucklescript.github.io/bucklescript/api/Node.Fs.html" target="_blank" rel="noopener nofollow" title="" class="external-link">interface to Node’s file system</a>. I was able to find the <code>readFileAsUtf8Sync()</code> function, which reads the entire file in as a single string. This would not be a good thing to use if I had an enormous, multi-gigabyte CSV file, but for a file the size that I was dealing with, it will do. It’s a synchronous call, so I don’t have to deal with callbacks. When the program finishes, I’ll use the corresponding <code>writeFileAsUtf8Sync()</code> to do my output.</p>
 <div class='code-block' data-block-syntax="re">
   
-  <pre class='code' data-block-id='9' id='block-9'><code>let <span class='pattern-ident' data-type="array(string)">args</span> = <span class='ident' data-type="array(string)">Node.Process.argv</span>;
-let <span class='pattern-ident' data-type="string">outFile</span> = <span class='ident' data-type="(array(string), int) => string">Arr.getUnsafe</span>(<span class='ident' data-type="array(string)">args</span>, <span class='ident' data-type="array(string) => int">Arr.length</span>(<span class='ident' data-type="array(string)">args</span>) <span class='operator' data-type="(int, int) => int">-</span> <span class='int' data-type="int">1</span>);
-let <span class='pattern-ident' data-type="string">inFile</span> = <span class='ident' data-type="(array(string), int) => string">Arr.getUnsafe</span>(<span class='ident' data-type="array(string)">args</span>, <span class='ident' data-type="array(string) => int">Arr.length</span>(<span class='ident' data-type="array(string)">args</span>) <span class='operator' data-type="(int, int) => int">-</span> <span class='int' data-type="int">2</span>);</code></pre>
+  <pre class='code' data-block-id='9' id='block-9'><code>let <span class='pattern-ident' data-type="string">allLines</span> = <span class='ident' data-type="string => string">Node.Fs.readFileAsUtf8Sync</span>(<span class='ident' data-type="string">inFile</span>);</code></pre>
   
   
   
 </div><div class='code-block' data-block-syntax="ml">
   
   <pre class='code' data-block-id='9-alt' id='block-9-alt'><code>[@@@ocaml.ppx.context { cookies = [] }]
-module Arr = Belt.Array
 let <span class='pattern-ident' data-type="array(string)">args</span> = <span class='ident' data-type="array(string)">Node.Process.argv</span>
-let <span class='pattern-ident' data-type="string">outFile</span> = <span class='ident' data-type="(array(string), int) => string">Arr.getUnsafe</span> <span class='ident' data-type="array(string)">args</span> ((<span class='ident' data-type="array(string) => int">Arr.length</span> <span class='ident' data-type="array(string)">args</span>) <span class='operator' data-type="(int, int) => int">-</span> <span class='int' data-type="int">1</span>)
-let <span class='pattern-ident' data-type="string">inFile</span> = <span class='ident' data-type="(array(string), int) => string">Arr.getUnsafe</span> <span class='ident' data-type="array(string)">args</span> ((<span class='ident' data-type="array(string) => int">Arr.length</span> <span class='ident' data-type="array(string)">args</span>) <span class='operator' data-type="(int, int) => int">-</span> <span class='int' data-type="int">2</span>)</code></pre>
-  
-  
-  
-</div>
-
-<p>This is where (not for the first time during this program) I got lazy. <code>Belt.Array.get()</code> returns <code>option</code> type, and I really didn’t want to deal with that, so I went with <code>getUnsafe()</code>, which means that if you don’t provide enough arguments to the program, it will crash.</p>
-<a href="#reading-the-input-file" id="reading-the-input-file"><h2>Reading the Input File</h2></a>
-
-<p>ReasonML also has an <a href="https://bucklescript.github.io/bucklescript/api/Node.Fs.html" target="_blank" rel="noopener nofollow" title="" class="external-link">interface to Node’s file system</a>. I was able to find the <code>readFileAsUtf8Sync()</code> function, which reads the entire file in as a single string. This would not be a good thing to use if I had an enormous, multi-gigabyte CSV file, but for a file the size that I was dealing with, it will do. It’s a synchronous call, so I don’t have to deal with callbacks. When the program finishes, I’ll use the corresponding <code>writeFileAsUtf8Sync()</code> to do my output.</p>
-<div class='code-block' data-block-syntax="re">
-  
-  <pre class='code' data-block-id='8' id='block-8'><code>let <span class='pattern-ident' data-type="string">allLines</span> = <span class='ident' data-type="string => string">Node.Fs.readFileAsUtf8Sync</span>(<span class='ident' data-type="string">inFile</span>);</code></pre>
-  
-  
-  
-</div><div class='code-block' data-block-syntax="ml">
-  
-  <pre class='code' data-block-id='8-alt' id='block-8-alt'><code>[@@@ocaml.ppx.context { cookies = [] }]
-module Arr = Belt.Array
-let <span class='pattern-ident' data-type="array(string)">args</span> = <span class='ident' data-type="array(string)">Node.Process.argv</span>
-let <span class='pattern-ident' data-type="string">outFile</span> = <span class='ident' data-type="(array(string), int) => string">Arr.getUnsafe</span> <span class='ident' data-type="array(string)">args</span> ((<span class='ident' data-type="array(string) => int">Arr.length</span> <span class='ident' data-type="array(string)">args</span>) <span class='operator' data-type="(int, int) => int">-</span> <span class='int' data-type="int">1</span>)
-let <span class='pattern-ident' data-type="string">inFile</span> = <span class='ident' data-type="(array(string), int) => string">Arr.getUnsafe</span> <span class='ident' data-type="array(string)">args</span> ((<span class='ident' data-type="array(string) => int">Arr.length</span> <span class='ident' data-type="array(string)">args</span>) <span class='operator' data-type="(int, int) => int">-</span> <span class='int' data-type="int">2</span>)
+let <span class='pattern-ident' data-type="string">outFile</span> = <span class='ident' data-type="(array(string), int) => string">Belt.Array.getUnsafe</span> <span class='ident' data-type="array(string)">args</span> ((<span class='ident' data-type="array(string) => int">Belt.Array.length</span> <span class='ident' data-type="array(string)">args</span>) <span class='operator' data-type="(int, int) => int">-</span> <span class='int' data-type="int">1</span>)
+let <span class='pattern-ident' data-type="string">inFile</span> = <span class='ident' data-type="(array(string), int) => string">Belt.Array.getUnsafe</span> <span class='ident' data-type="array(string)">args</span> ((<span class='ident' data-type="array(string) => int">Belt.Array.length</span> <span class='ident' data-type="array(string)">args</span>) <span class='operator' data-type="(int, int) => int">-</span> <span class='int' data-type="int">2</span>)
 let <span class='pattern-ident' data-type="string">allLines</span> = <span class='ident' data-type="string => string">Node.Fs.readFileAsUtf8Sync</span> <span class='ident' data-type="string">inFile</span></code></pre>
   
   
@@ -131,7 +131,7 @@ let <span class='pattern-ident' data-type="string">allLines</span> = <span class
 <p>and here it is in ReasonML:</p>
 <div class='code-block' data-block-syntax="re">
   
-  <pre class='code' data-block-id='7' id='block-7'><code>module Error = {
+  <pre class='code' data-block-id='8' id='block-8'><code>module Error = {
    [@bs.deriving abstract] type <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>t</span></span></span></span></span> = {
     [@bs.as &quot;type&quot;]  type_: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>string</span></span></span>,
     code: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>string</span></span></span>,
@@ -144,7 +144,7 @@ let <span class='pattern-ident' data-type="string">allLines</span> = <span class
   
 </div><div class='code-block' data-block-syntax="ml">
   
-  <pre class='code' data-block-id='7-alt' id='block-7-alt'><code>[@@@ocaml.ppx.context { cookies = [] }]
+  <pre class='code' data-block-id='8-alt' id='block-8-alt'><code>[@@@ocaml.ppx.context { cookies = [] }]
 module Error =
   struct
     type <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>t</span></span></span></span></span> =
@@ -162,7 +162,7 @@ module Error =
 <p>First, the convention for the type name is <code>t</code>. I could have called it <code>errorType</code>, but then every time I wanted to access a field I would have to type <code>Error.errorType....</code>. This way, I refer to <code>Error.t...</code>, which you can mentally read as <code>error type</code>. Second, this object has a field named <code>type</code>, which happens to be a reserved word in ReasonML. To get around this problem, I call the field <code>type_</code>, and the <code>[@bs.as &quot;type&quot;]</code> directive tells ReasonML to compile that field to use the name <code>type</code> when it emits JavaScript. Here are the other two objects that Papa Parse gives you:</p>
 <div class='code-block' data-block-syntax="re">
   
-  <pre class='code' data-block-id='6' id='block-6'><code>module Meta = {
+  <pre class='code' data-block-id='7' id='block-7'><code>module Meta = {
   [@bs.deriving abstract] type <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'><span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>t</span></span></span></span></span></span> = {
     delimiter: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>string</span></span></span>,
     linebreak: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>string</span></span></span>,
@@ -185,7 +185,7 @@ module Results = {
   
 </div><div class='code-block' data-block-syntax="ml">
   
-  <pre class='code' data-block-id='6-alt' id='block-6-alt'><code>[@@@ocaml.ppx.context { cookies = [] }]
+  <pre class='code' data-block-id='7-alt' id='block-7-alt'><code>[@@@ocaml.ppx.context { cookies = [] }]
 module Error =
   struct
     type <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>t</span></span></span></span></span> =
@@ -221,14 +221,14 @@ module Results =
 <p>The <code>parse()</code> function in Papa Parse takes one required parameter: the string to be parsed, and an optional configuration object. It turns out that the defaults for Papa Parse are exactly what I needed, so I did not have to create a new data type for the configuration object. Instead, I wrote this:</p>
 <div class='code-block' data-block-syntax="re">
   
-  <pre class='code' data-block-id='5' id='block-5'><code>[@bs.val] [@bs.module &quot;papaparse&quot;] external parse :
+  <pre class='code' data-block-id='6' id='block-6'><code>[@bs.val] [@bs.module &quot;papaparse&quot;] external parse :
   (<span class='type-constructor'>string</span>) =&gt; <span class='type-constructor'>Results.t</span> = &quot;parse&quot;;</code></pre>
   
   
   
 </div><div class='code-block' data-block-syntax="ml">
   
-  <pre class='code' data-block-id='5-alt' id='block-5-alt'><code>[@@@ocaml.ppx.context { cookies = [] }]
+  <pre class='code' data-block-id='6-alt' id='block-6-alt'><code>[@@@ocaml.ppx.context { cookies = [] }]
 module Error =
   struct
     type <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>t</span></span></span></span></span> =
@@ -268,7 +268,71 @@ external parse : <span class='type-constructor'>string</span> -&gt; <span class=
 <p>Now I used this to parse the CSV file and get the <code>data</code> object from the result (I didn’t worry about <code>error</code> or <code>meta</code>; laziness again):</p>
 <div class='code-block' data-block-syntax="re">
   
-  <pre class='code' data-block-id='4' id='block-4'><code>let <span class='pattern-ident' data-type="array(array(string))">parseData</span> = <span class='ident' data-type="Results.t => array(array(string))">Results.data</span>(<span class='ident' data-type="string => Results.t">parse</span>(<span class='ident' data-type="string">allLines</span>));</code></pre>
+  <pre class='code' data-block-id='5' id='block-5'><code>let <span class='pattern-ident' data-type="array(array(string))">parseData</span> = <span class='ident' data-type="Results.t => array(array(string))">Results.data</span>(<span class='ident' data-type="string => Results.t">parse</span>(<span class='ident' data-type="string">allLines</span>));</code></pre>
+  
+  
+  
+</div><div class='code-block' data-block-syntax="ml">
+  
+  <pre class='code' data-block-id='5-alt' id='block-5-alt'><code>[@@@ocaml.ppx.context { cookies = [] }]
+module Error =
+  struct
+    type <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>t</span></span></span></span></span> =
+      {
+      type_: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>string</span></span></span>[@bs.as ((&quot;type&quot;)[@reason.raw_literal &quot;type&quot;])];
+      code: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>string</span></span></span>;
+      message: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>string</span></span></span>;
+      row: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>int</span></span></span>;}[@@bs.deriving abstract]
+  end
+module Meta =
+  struct
+    type <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'><span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>t</span></span></span></span></span></span> =
+      {
+      delimiter: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>string</span></span></span>;
+      linebreak: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>string</span></span></span>;
+      aborted: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>bool</span></span></span>;
+      fields: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>string</span></span></span> <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>array</span></span></span>;
+      truncated: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>bool</span></span></span>;}[@@bs.deriving abstract]
+  end
+module Results =
+  struct
+    type <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>t</span></span></span></span> = {
+      data: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>string</span></span></span> <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>array</span></span></span> <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>array</span></span></span>;
+      error: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>Error.t</span></span></span> <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>array</span></span></span>;
+      meta: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>Meta.t</span></span></span>;}[@@bs.deriving abstract]
+  end
+external parse : <span class='type-constructor'>string</span> -&gt; <span class='type-constructor'>Results.t</span> = &quot;parse&quot;[@@bs.val ][@@bs.module
+                                                           ((&quot;papaparse&quot;)
+                                                             [@reason.raw_literal
+                                                               &quot;papaparse&quot;])]
+let <span class='pattern-ident' data-type="array(string)">args</span> = <span class='ident' data-type="array(string)">Node.Process.argv</span>
+let <span class='pattern-ident' data-type="string">outFile</span> = <span class='ident' data-type="(array(string), int) => string">Belt.Array.getUnsafe</span> <span class='ident' data-type="array(string)">args</span> ((<span class='ident' data-type="array(string) => int">Belt.Array.length</span> <span class='ident' data-type="array(string)">args</span>) <span class='operator' data-type="(int, int) => int">-</span> <span class='int' data-type="int">1</span>)
+let <span class='pattern-ident' data-type="string">inFile</span> = <span class='ident' data-type="(array(string), int) => string">Belt.Array.getUnsafe</span> <span class='ident' data-type="array(string)">args</span> ((<span class='ident' data-type="array(string) => int">Belt.Array.length</span> <span class='ident' data-type="array(string)">args</span>) <span class='operator' data-type="(int, int) => int">-</span> <span class='int' data-type="int">2</span>)
+let <span class='pattern-ident' data-type="string">allLines</span> = <span class='ident' data-type="string => string">Node.Fs.readFileAsUtf8Sync</span> <span class='ident' data-type="string">inFile</span>
+let <span class='pattern-ident' data-type="array(array(string))">parseData</span> = <span class='ident' data-type="Results.t => array(array(string))">Results.data</span> (<span class='ident' data-type="string => Results.t">parse</span> <span class='ident' data-type="string">allLines</span>)</code></pre>
+  
+  
+  
+</div>
+
+<p>Note the function call <code>Results.data(...)</code> in the last line. When you created the <code>Results.t</code> data type, ReasonML created <em>getter</em> and <em>setter</em> functions to allow you to read and write fields in the JavaScript object, so <code>Results.data(...)</code> gives back the <code>data</code> field from the return value of <code>parse(allLines)</code>.</p>
+<p><code>parseData</code> is an array of array of string. For example, the first part of CSV file might parse into something like this (just a segment to give you the idea):</p>
+<pre class='code-txt txt'><code class='txt'>[|
+  [|&quot;Timestamp&quot;, &quot;Which dojo did you attend?&quot;, &quot;Any previous programming experience&quot;...|],
+  [|&quot;5/27/2018 19:46:19&quot;, &quot;Austria, Vienna&quot;, &quot;Yes&quot;...|],
+  [|&quot;5/27/2018 23:08:53&quot;,&quot;Belgium, Brussels&quot;, &quot;Yes&quot;...|]
+|]</code></pre>
+
+<p>I used <code>Belt.Array.slice()</code> to separate it into two arrays of arrays; the first one containing only the headers, and the second containing the remaining rows:</p>
+<div class='code-block' data-block-syntax="re">
+  
+  <pre class='code' data-block-id='4' id='block-4'><code>let <span class='pattern-ident' data-type="array(string)">headers</span> = <span class='ident' data-type="(array(array(string)), ~offset: int, ~len: int) => array(
+  array(string)
+)">Belt.Array.slice</span>(<span class='ident' data-type="array(array(string))">parseData</span>, ~offset=<span class='int' data-type="int">0</span>, ~len=<span class='int' data-type="int">1</span>) |.
+  <span class='ident' data-type="(array(array(string)), int) => array(string)">Belt.Array.getUnsafe</span>(<span class='pattern-ident' data-type="array(array(string))"><span class='operator' data-type="array(array(string))">_</span></span>,<span class='int' data-type="int">0</span>);
+let <span class='pattern-ident' data-type="array(array(string))">contentRows</span> = <span class='ident' data-type="(array(array(string)), ~offset: int, ~len: int) => array(
+  array(string)
+)">Belt.Array.slice</span>(<span class='ident' data-type="array(array(string))">parseData</span>, ~offset=<span class='int' data-type="int">1</span>, ~len=<span class='ident' data-type="array(array(string)) => int">Belt.Array.length</span>(<span class='ident' data-type="array(array(string))">parseData</span>) <span class='operator' data-type="(int, int) => int">-</span> <span class='int' data-type="int">1</span>);</code></pre>
   
   
   
@@ -305,84 +369,21 @@ external parse : <span class='type-constructor'>string</span> -&gt; <span class=
                                                            ((&quot;papaparse&quot;)
                                                              [@reason.raw_literal
                                                                &quot;papaparse&quot;])]
-module Arr = Belt.Array
 let <span class='pattern-ident' data-type="array(string)">args</span> = <span class='ident' data-type="array(string)">Node.Process.argv</span>
-let <span class='pattern-ident' data-type="string">outFile</span> = <span class='ident' data-type="(array(string), int) => string">Arr.getUnsafe</span> <span class='ident' data-type="array(string)">args</span> ((<span class='ident' data-type="array(string) => int">Arr.length</span> <span class='ident' data-type="array(string)">args</span>) <span class='operator' data-type="(int, int) => int">-</span> <span class='int' data-type="int">1</span>)
-let <span class='pattern-ident' data-type="string">inFile</span> = <span class='ident' data-type="(array(string), int) => string">Arr.getUnsafe</span> <span class='ident' data-type="array(string)">args</span> ((<span class='ident' data-type="array(string) => int">Arr.length</span> <span class='ident' data-type="array(string)">args</span>) <span class='operator' data-type="(int, int) => int">-</span> <span class='int' data-type="int">2</span>)
-let <span class='pattern-ident' data-type="string">allLines</span> = <span class='ident' data-type="string => string">Node.Fs.readFileAsUtf8Sync</span> <span class='ident' data-type="string">inFile</span>
-let <span class='pattern-ident' data-type="array(array(string))">parseData</span> = <span class='ident' data-type="Results.t => array(array(string))">Results.data</span> (<span class='ident' data-type="string => Results.t">parse</span> <span class='ident' data-type="string">allLines</span>)</code></pre>
-  
-  
-  
-</div>
-
-<p>Note the function call <code>Results.data(...)</code> in the last line. When you created the <code>Results.t</code> data type, ReasonML created <em>getter</em> and <em>setter</em> functions to allow you to read and write fields in the JavaScript object, so <code>Results.data(...)</code> gives back the <code>data</code> field from the return value of <code>parse(allLines)</code>.</p>
-<p><code>parseData</code> is an array of array of string. For example, the first part of CSV file might parse into something like this (just a segment to give you the idea):</p>
-<pre class='code-txt txt'><code class='txt'>[|
-  [|&quot;Timestamp&quot;, &quot;Which dojo did you attend?&quot;, &quot;Any previous programming experience&quot;...|],
-  [|&quot;5/27/2018 19:46:19&quot;, &quot;Austria, Vienna&quot;, &quot;Yes&quot;...|],
-  [|&quot;5/27/2018 23:08:53&quot;,&quot;Belgium, Brussels&quot;, &quot;Yes&quot;...|]
-|]</code></pre>
-
-<p>I used <code>Belt.Array.slice()</code> to separate it into two arrays of arrays; the first one containing only the headers, and the second containing the remaining rows:</p>
-<div class='code-block' data-block-syntax="re">
-  
-  <pre class='code' data-block-id='3' id='block-3'><code>let <span class='pattern-ident' data-type="array(string)">headers</span> = <span class='ident' data-type="(array(array(string)), ~offset: int, ~len: int) => array(
-  array(string)
-)">Arr.slice</span>(<span class='ident' data-type="array(array(string))">parseData</span>, ~offset=<span class='int' data-type="int">0</span>, ~len=<span class='int' data-type="int">1</span>) |. <span class='ident' data-type="(array(array(string)), int) => array(string)">Arr.getUnsafe</span>(<span class='pattern-ident' data-type="array(array(string))"><span class='operator' data-type="array(array(string))">_</span></span>,<span class='int' data-type="int">0</span>);
-let <span class='pattern-ident' data-type="array(array(string))">contentRows</span> = <span class='ident' data-type="(array(array(string)), ~offset: int, ~len: int) => array(
-  array(string)
-)">Arr.slice</span>(<span class='ident' data-type="array(array(string))">parseData</span>, ~offset=<span class='int' data-type="int">1</span>, ~len=<span class='ident' data-type="array(array(string)) => int">Arr.length</span>(<span class='ident' data-type="array(array(string))">parseData</span>) <span class='operator' data-type="(int, int) => int">-</span> <span class='int' data-type="int">1</span>);</code></pre>
-  
-  
-  
-</div><div class='code-block' data-block-syntax="ml">
-  
-  <pre class='code' data-block-id='3-alt' id='block-3-alt'><code>[@@@ocaml.ppx.context { cookies = [] }]
-module Error =
-  struct
-    type <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>t</span></span></span></span></span> =
-      {
-      type_: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>string</span></span></span>[@bs.as ((&quot;type&quot;)[@reason.raw_literal &quot;type&quot;])];
-      code: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>string</span></span></span>;
-      message: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>string</span></span></span>;
-      row: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>int</span></span></span>;}[@@bs.deriving abstract]
-  end
-module Meta =
-  struct
-    type <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'><span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>t</span></span></span></span></span></span> =
-      {
-      delimiter: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>string</span></span></span>;
-      linebreak: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>string</span></span></span>;
-      aborted: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>bool</span></span></span>;
-      fields: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>string</span></span></span> <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>array</span></span></span>;
-      truncated: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>bool</span></span></span>;}[@@bs.deriving abstract]
-  end
-module Results =
-  struct
-    type <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>t</span></span></span></span> = {
-      data: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>string</span></span></span> <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>array</span></span></span> <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>array</span></span></span>;
-      error: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>Error.t</span></span></span> <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>array</span></span></span>;
-      meta: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>Meta.t</span></span></span>;}[@@bs.deriving abstract]
-  end
-external parse : <span class='type-constructor'>string</span> -&gt; <span class='type-constructor'>Results.t</span> = &quot;parse&quot;[@@bs.val ][@@bs.module
-                                                           ((&quot;papaparse&quot;)
-                                                             [@reason.raw_literal
-                                                               &quot;papaparse&quot;])]
-module Arr = Belt.Array
-let <span class='pattern-ident' data-type="array(string)">args</span> = <span class='ident' data-type="array(string)">Node.Process.argv</span>
-let <span class='pattern-ident' data-type="string">outFile</span> = <span class='ident' data-type="(array(string), int) => string">Arr.getUnsafe</span> <span class='ident' data-type="array(string)">args</span> ((<span class='ident' data-type="array(string) => int">Arr.length</span> <span class='ident' data-type="array(string)">args</span>) <span class='operator' data-type="(int, int) => int">-</span> <span class='int' data-type="int">1</span>)
-let <span class='pattern-ident' data-type="string">inFile</span> = <span class='ident' data-type="(array(string), int) => string">Arr.getUnsafe</span> <span class='ident' data-type="array(string)">args</span> ((<span class='ident' data-type="array(string) => int">Arr.length</span> <span class='ident' data-type="array(string)">args</span>) <span class='operator' data-type="(int, int) => int">-</span> <span class='int' data-type="int">2</span>)
+let <span class='pattern-ident' data-type="string">outFile</span> = <span class='ident' data-type="(array(string), int) => string">Belt.Array.getUnsafe</span> <span class='ident' data-type="array(string)">args</span> ((<span class='ident' data-type="array(string) => int">Belt.Array.length</span> <span class='ident' data-type="array(string)">args</span>) <span class='operator' data-type="(int, int) => int">-</span> <span class='int' data-type="int">1</span>)
+let <span class='pattern-ident' data-type="string">inFile</span> = <span class='ident' data-type="(array(string), int) => string">Belt.Array.getUnsafe</span> <span class='ident' data-type="array(string)">args</span> ((<span class='ident' data-type="array(string) => int">Belt.Array.length</span> <span class='ident' data-type="array(string)">args</span>) <span class='operator' data-type="(int, int) => int">-</span> <span class='int' data-type="int">2</span>)
 let <span class='pattern-ident' data-type="string">allLines</span> = <span class='ident' data-type="string => string">Node.Fs.readFileAsUtf8Sync</span> <span class='ident' data-type="string">inFile</span>
 let <span class='pattern-ident' data-type="array(array(string))">parseData</span> = <span class='ident' data-type="Results.t => array(array(string))">Results.data</span> (<span class='ident' data-type="string => Results.t">parse</span> <span class='ident' data-type="string">allLines</span>)
 let <span class='pattern-ident' data-type="array(string)">headers</span> =
   (<span class='ident' data-type="(array(array(string)), ~offset: int, ~len: int) => array(
   array(string)
-)">Arr.slice</span> <span class='ident' data-type="array(array(string))">parseData</span> ~offset:<span class='int' data-type="int">0</span> ~len:<span class='int' data-type="int">1</span>) |. (fun <span class='pattern-ident' data-type="array(array(string))">__x</span>  -&gt; <span class='ident' data-type="(array(array(string)), int) => array(string)">Arr.getUnsafe</span> <span class='operator' data-type="array(array(string))">__x</span> <span class='int' data-type="int">0</span>)
+)">Belt.Array.slice</span> <span class='ident' data-type="array(array(string))">parseData</span> ~offset:<span class='int' data-type="int">0</span> ~len:<span class='int' data-type="int">1</span>) |.
+    (fun <span class='pattern-ident' data-type="array(array(string))">__x</span>  -&gt; <span class='ident' data-type="(array(array(string)), int) => array(string)">Belt.Array.getUnsafe</span> <span class='operator' data-type="array(array(string))">__x</span> <span class='int' data-type="int">0</span>)
 let <span class='pattern-ident' data-type="array(array(string))">contentRows</span> =
   <span class='ident' data-type="(array(array(string)), ~offset: int, ~len: int) => array(
   array(string)
-)">Arr.slice</span> <span class='ident' data-type="array(array(string))">parseData</span> ~offset:<span class='int' data-type="int">1</span> ~len:((<span class='ident' data-type="array(array(string)) => int">Arr.length</span> <span class='ident' data-type="array(array(string))">parseData</span>) <span class='operator' data-type="(int, int) => int">-</span> <span class='int' data-type="int">1</span>)</code></pre>
+)">Belt.Array.slice</span> <span class='ident' data-type="array(array(string))">parseData</span> ~offset:<span class='int' data-type="int">1</span>
+    ~len:((<span class='ident' data-type="array(array(string)) => int">Belt.Array.length</span> <span class='ident' data-type="array(array(string))">parseData</span>) <span class='operator' data-type="(int, int) => int">-</span> <span class='int' data-type="int">1</span>)</code></pre>
   
   
   
@@ -394,7 +395,8 @@ let <span class='pattern-ident' data-type="array(array(string))">contentRows</sp
 |]</code></pre>
 
 <p>but I want only a simple array, so I had to pass that result to <code>getUnsafe()</code> to extract the first (and only) sub-array. The <a href="https://bucklescript.github.io/docs/en/fast-pipe.html" target="_blank" rel="noopener nofollow" title="" class="external-link"><em>fast pipe</em></a> operator <code>|.</code> sends the value on the left to fill in the <code>_</code> in the next call. You will often see people using fast pipe instead of nested function calls like this:</p>
-<pre class='code-txt txt'><code class='txt'>let headers = Arr.getUnsafe(Arr.slice(parseData, ~offset=0, ~len=1), 0);</code></pre>
+<pre class='code-txt txt'><code class='txt'>let headers = Belt.Array.getUnsafe(
+  Belt.Array.slice(parseData, ~offset=0, ~len=1), 0);</code></pre>
 
 <p>The second line that slices off the <code>contentRows</code> is fine as it is; I <em>want</em> an array of arrays here.</p>
 <a href="#processing-the-rows" id="processing-the-rows"><h2>Processing the Rows</h2></a>
@@ -402,7 +404,7 @@ let <span class='pattern-ident' data-type="array(array(string))">contentRows</sp
 <p>As mentioned before, each row will become a definition list, each column as <code>&lt;dt&gt;header&lt;/dt&gt;</code> and the cell data as <code>&lt;dd&gt;&lt;div&gt;content&lt;/div&gt;&lt;/dd&gt;</code>. Why the <code>&lt;div&gt;</code>? That will let me handle cell contents with newlines; I will translate each newline into a <code>&lt;/div&gt;&lt;div&gt;\n</code>, and they will fit nicely between the beginning and ending tags already in the <code>&lt;dd&gt;</code>. Before I do that, I need to escape entities like <code>&lt;</code>, <code>&gt;</code>, and <code>&amp;</code> within the text. Here’s a function that does that by fast piping a string through a series of global string replacements, courtesy of <code>Js.String.replaceByRe()</code>, where <code>Re</code> stands for <em>regular expression</em>:</p>
 <div class='code-block' data-block-syntax="re">
   
-  <pre class='code' data-block-id='2' id='block-2'><code>let <span class='pattern-ident' data-type="string => string">processCell</span> = (s: <span class='type-constructor'>string</span>) : <span class='type-constructor'>string</span> =&gt; {
+  <pre class='code' data-block-id='3' id='block-3'><code>let <span class='pattern-ident' data-type="string => string">processCell</span> = (s: <span class='type-constructor'>string</span>) : <span class='type-constructor'>string</span> =&gt; {
   <span class='ident' data-type="Js.String.t">s</span> |.
   <span class='ident' data-type="(Js.Re.t, Js.String.t, Js.String.t) => Js.String.t">Js.String.replaceByRe</span>([%<span class='type-constructor'><span class='ident' data-type="string => Js.Re.t">re</span></span> <span class='string' data-type="string">&quot;/\\&amp;/g&quot;</span>], <span class='string' data-type="Js.String.t">&quot;&amp;amp;&quot;</span>, <span class='pattern-ident' data-type="Js.String.t"><span class='operator' data-type="Js.String.t">_</span></span>) |.
   <span class='ident' data-type="(Js.Re.t, Js.String.t, Js.String.t) => Js.String.t">Js.String.replaceByRe</span>([%<span class='type-constructor'><span class='ident' data-type="string => Js.Re.t">re</span></span> <span class='string' data-type="string">&quot;/&lt;/g&quot;</span>], <span class='string' data-type="Js.String.t">&quot;&amp;lt;&quot;</span>, <span class='pattern-ident' data-type="Js.String.t"><span class='operator' data-type="Js.String.t">_</span></span>) |.
@@ -414,7 +416,7 @@ let <span class='pattern-ident' data-type="array(array(string))">contentRows</sp
   
 </div><div class='code-block' data-block-syntax="ml">
   
-  <pre class='code' data-block-id='2-alt' id='block-2-alt'><code>[@@@ocaml.ppx.context { cookies = [] }]
+  <pre class='code' data-block-id='3-alt' id='block-3-alt'><code>[@@@ocaml.ppx.context { cookies = [] }]
 let <span class='pattern-ident' data-type="string => string">processCell</span> (s : <span class='type-constructor'>string</span>) =
   ((((<span class='ident' data-type="Js.String.t">s</span> |.
         (fun <span class='pattern-ident' data-type="Js.String.t">__x</span>  -&gt;
@@ -448,10 +450,10 @@ I have, for many years, taught beginning programming courses. Sometimes, I am in
 <p>Now I can create a definition list from an array of headers and a row’s worth of cells. I couldn’t use <code>Belt.Array.reduce()</code> because I have two arrays to traverse, not one. There is a function <code>Belt.Array.reduceReverse2()</code>, which <em>can</em> handle two parallel arrays, but it iterates from the end to the beginning. I decided it would be simpler to write a recursive helper function that has two arguments: an accumulated string <code>acc</code> and an index number <code>n</code>:</p>
 <div class='code-block' data-block-syntax="re">
   
-  <pre class='code' data-block-id='1' id='block-1'><code>let <span class='pattern-ident' data-type="(array(string), array(string)) => string">createDefnList</span> = (headers: <span class='type-constructor'>array</span>(<span class='type-constructor'>string</span>), cells: <span class='type-constructor'>array</span>(<span class='type-constructor'>string</span>)) : <span class='type-constructor'>string</span> =&gt; {
+  <pre class='code' data-block-id='2' id='block-2'><code>let <span class='pattern-ident' data-type="(array(string), array(string)) => string">createDefnList</span> = (headers: <span class='type-constructor'>array</span>(<span class='type-constructor'>string</span>), cells: <span class='type-constructor'>array</span>(<span class='type-constructor'>string</span>)) : <span class='type-constructor'>string</span> =&gt; {
 
   let rec <span class='pattern-ident' data-type="(string, int) => string">helper</span> = (acc: <span class='type-constructor'>string</span>, n: <span class='type-constructor'>int</span>) : <span class='type-constructor'>string</span> =&gt; {
-    if (<span class='ident' data-type="int">n</span> <span class='operator' data-type="(int, int) => bool">==</span> <span class='ident' data-type="array(string) => int">Arr.length</span>(<span class='ident' data-type="array(string)">headers</span>)) {
+    if (<span class='ident' data-type="int">n</span> <span class='operator' data-type="(int, int) => bool">==</span> <span class='ident' data-type="array(string) => int">Belt.Array.length</span>(<span class='ident' data-type="array(string)">headers</span>)) {
       <span class='ident' data-type="string">acc</span>
     } else {
       <span class='ident' data-type="(string, int) => string">helper</span>(<span class='ident' data-type="string">acc</span> <span class='operator' data-type="(string, string) => string">++</span> <span class='string' data-type="string">&quot;&lt;dt&gt;&quot;</span> <span class='operator' data-type="(string, string) => string">++</span> <span class='ident' data-type="array(string)">headers</span>[<span class='ident' data-type="int">n</span>] <span class='operator' data-type="(string, string) => string">++</span> <span class='string' data-type="string">&quot;&lt;/dt&gt;\n&lt;dd&gt;&lt;div&gt;&quot;</span>
@@ -460,6 +462,70 @@ I have, for many years, taught beginning programming courses. Sometimes, I am in
   };
   
   <span class='string' data-type="string">&quot;&lt;dl&gt;&quot;</span> <span class='operator' data-type="(string, string) => string">++</span> <span class='ident' data-type="(string, int) => string">helper</span>(<span class='string' data-type="string">&quot;&quot;</span>, <span class='int' data-type="int">0</span>) <span class='operator' data-type="(string, string) => string">++</span> <span class='string' data-type="string">&quot;&lt;/dl&gt;\n\n&quot;</span>;
+};</code></pre>
+  
+  
+  
+</div><div class='code-block' data-block-syntax="ml">
+  
+  <pre class='code' data-block-id='2-alt' id='block-2-alt'><code>[@@@ocaml.ppx.context { cookies = [] }]
+let <span class='pattern-ident' data-type="string => string">processCell</span> (s : <span class='type-constructor'>string</span>) =
+  ((((<span class='ident' data-type="Js.String.t">s</span> |.
+        (fun <span class='pattern-ident' data-type="Js.String.t">__x</span>  -&gt;
+           <span class='ident' data-type="(Js.Re.t, Js.String.t, Js.String.t) => Js.String.t">Js.String.replaceByRe</span>
+             ([%<span class='type-constructor'><span class='ident' data-type="string => Js.Re.t">re</span></span> ((&quot;/\\&amp;/g&quot;)[@reason.raw_literal &quot;/\\\\&amp;/g&quot;])])
+             ((&quot;&amp;amp;&quot;)[@reason.raw_literal &quot;&amp;amp;&quot;]) <span class='operator' data-type="Js.String.t">__x</span>))
+       |.
+       (fun <span class='pattern-ident' data-type="Js.String.t">__x</span>  -&gt;
+          <span class='ident' data-type="(Js.Re.t, Js.String.t, Js.String.t) => Js.String.t">Js.String.replaceByRe</span>
+            ([%<span class='type-constructor'><span class='ident' data-type="string => Js.Re.t">re</span></span> ((&quot;/&lt;/g&quot;)[@reason.raw_literal &quot;/&lt;/g&quot;])])
+            ((&quot;&amp;lt;&quot;)[@reason.raw_literal &quot;&amp;lt;&quot;]) <span class='operator' data-type="Js.String.t">__x</span>))
+      |.
+      (fun <span class='pattern-ident' data-type="Js.String.t">__x</span>  -&gt;
+         <span class='ident' data-type="(Js.Re.t, Js.String.t, Js.String.t) => Js.String.t">Js.String.replaceByRe</span> ([%<span class='type-constructor'><span class='ident' data-type="string => Js.Re.t">re</span></span> ((&quot;/&gt;/g&quot;)[@reason.raw_literal &quot;/&gt;/g&quot;])])
+           ((&quot;&amp;gt;&quot;)[@reason.raw_literal &quot;&amp;gt;&quot;]) <span class='operator' data-type="Js.String.t">__x</span>))
+     |.
+     (fun <span class='pattern-ident' data-type="Js.String.t">__x</span>  -&gt;
+        <span class='ident' data-type="(Js.Re.t, Js.String.t, Js.String.t) => Js.String.t">Js.String.replaceByRe</span>
+          ([%<span class='type-constructor'><span class='ident' data-type="string => Js.Re.t">re</span></span> ((&quot;/\\n/g&quot;)[@reason.raw_literal &quot;/\\\\n/g&quot;])])
+          ((&quot;&lt;/div&gt;&lt;div&gt;&quot;)[@reason.raw_literal &quot;&lt;/div&gt;&lt;div&gt;&quot;]) <span class='operator' data-type="Js.String.t">__x</span>) : 
+  <span class='type-constructor'>string</span>)
+let <span class='pattern-ident' data-type="(array(string), array(string)) => string">createDefnList</span> (headers : <span class='type-constructor'>string</span> <span class='type-constructor'>array</span>) (cells : <span class='type-constructor'>string</span> <span class='type-constructor'>array</span>) =
+  (let rec <span class='pattern-ident' data-type="(string, int) => string">helper</span> (acc : <span class='type-constructor'>string</span>) (n : <span class='type-constructor'>int</span>) =
+     (if <span class='ident' data-type="int">n</span> <span class='operator' data-type="(int, int) => bool">=</span> (<span class='ident' data-type="array(string) => int">Belt.Array.length</span> <span class='ident' data-type="array(string)">headers</span>)
+      then <span class='ident' data-type="string">acc</span>
+      else
+        <span class='ident' data-type="(string, int) => string">helper</span>
+          (<span class='ident' data-type="string">acc</span> <span class='operator' data-type="(string, string) => string">^</span>
+             (((&quot;&lt;dt&gt;&quot;)[@reason.raw_literal &quot;&lt;dt&gt;&quot;]) <span class='operator' data-type="(string, string) => string">^</span>
+                ((<span class='ident' data-type="array(string)">headers</span>.(<span class='ident' data-type="int">n</span>)) <span class='operator' data-type="(string, string) => string">^</span>
+                   (((&quot;&lt;/dt&gt;\n&lt;dd&gt;&lt;div&gt;&quot;)[@reason.raw_literal
+                                           &quot;&lt;/dt&gt;\\n&lt;dd&gt;&lt;div&gt;&quot;])
+                      <span class='operator' data-type="(string, string) => string">^</span>
+                      ((<span class='ident' data-type="string => string">processCell</span> (<span class='ident' data-type="array(string)">cells</span>.(<span class='ident' data-type="int">n</span>))) <span class='operator' data-type="(string, string) => string">^</span>
+                         ((&quot;&lt;/div&gt;&lt;/dd&gt;\n&quot;)[@reason.raw_literal
+                                             &quot;&lt;/div&gt;&lt;/dd&gt;\\n&quot;])))))) (
+          <span class='ident' data-type="int">n</span> <span class='operator' data-type="(int, int) => int">+</span> <span class='int' data-type="int">1</span>) : <span class='type-constructor'>string</span>) in
+   ((&quot;&lt;dl&gt;&quot;)[@reason.raw_literal &quot;&lt;dl&gt;&quot;]) <span class='operator' data-type="(string, string) => string">^</span>
+     ((<span class='ident' data-type="(string, int) => string">helper</span> <span class='string' data-type="string">&quot;&quot;</span> <span class='int' data-type="int">0</span>) <span class='operator' data-type="(string, string) => string">^</span> ((&quot;&lt;/dl&gt;\n\n&quot;)[@reason.raw_literal &quot;&lt;/dl&gt;\\n\\n&quot;])) : 
+  <span class='type-constructor'>string</span>)</code></pre>
+  
+  
+  
+</div>
+
+<p>The keyword <code>rec</code> allows me to do recursive call. If the index <code>n</code> is at the end of the array, the function returns the accumulator. Otherwise, it calls the helper function recursively with a new accumulator (the old value plus a <code>&lt;dt&gt;..&lt;/dt&gt;</code> and <code>&lt;dd&gt;..&lt;/dd&gt;</code> for the current cell) and the next index value (<code>n + 1</code>).</p>
+<p>Notice that ReasonML has syntactic sugar that lets me write <code>headers[n]</code> instead of having to say <code>Array.get(headers, n)</code>. That’s the built-in <code>Array</code> module, not <code>Belt.Array</code>, by the way. The function raises an exception if the index is out of bounds.</p>
+<p>Now I can (finally) process all the rows in the array. My plan is to use <code>Belt.Array.map()</code> to apply <code>createDefnList()</code> to each of the rows in <code>contentRows</code>, which will give me an array of <code>&lt;dl&gt;...&lt;/dl&gt;</code> strings that I can join with <code>&lt;hr/&gt;</code> to visually separate them.  There’s just one problem: the function you give to <code>map()</code> can only have one parameter: the item from the array being processed, and <code>createDefnList()</code> has two parameters: The headers and the contents. There is a solution: <em>currying</em>. All functions in ReasonML are automatically curried—if you call them with fewer parameters than they specify, instead of giving you an error, the function returns a new function with the parameters you supplied “filled in.”  Look at this code:</p>
+<div class='code-block' data-block-syntax="re">
+  
+  <pre class='code' data-block-id='1' id='block-1'><code>let <span class='pattern-ident' data-type="(array(string), array(array(string))) => string">processRows</span> = (headers: <span class='type-constructor'>array</span>(<span class='type-constructor'>string</span>), rows: <span class='type-constructor'>array</span>(<span class='type-constructor'>array</span>(<span class='type-constructor'>string</span>))) : <span class='type-constructor'>string</span> =&gt; {
+  let <span class='pattern-ident' data-type="array(string) => string">helperFcn</span> = <span class='ident' data-type="(array(string), array(string)) => string">createDefnList</span>(<span class='ident' data-type="array(string)">headers</span>);
+  <span class='ident' data-type="(
+  array(array(string)),
+  array(string) => string
+) => Js.Array.t(string)">Belt.Array.map</span>(<span class='ident' data-type="array(array(string))">rows</span>, <span class='ident' data-type="array(string) => string">helperFcn</span>) |.
+    <span class='ident' data-type="(string, Js.Array.t(string)) => string">Js.Array.joinWith</span>(<span class='string' data-type="string">&quot;&lt;hr /&gt;\n&quot;</span>, <span class='pattern-ident' data-type="Js.Array.t(string)"><span class='operator' data-type="Js.Array.t(string)">_</span></span>);
 };</code></pre>
   
   
@@ -488,10 +554,9 @@ let <span class='pattern-ident' data-type="string => string">processCell</span> 
           ([%<span class='type-constructor'><span class='ident' data-type="string => Js.Re.t">re</span></span> ((&quot;/\\n/g&quot;)[@reason.raw_literal &quot;/\\\\n/g&quot;])])
           ((&quot;&lt;/div&gt;&lt;div&gt;&quot;)[@reason.raw_literal &quot;&lt;/div&gt;&lt;div&gt;&quot;]) <span class='operator' data-type="Js.String.t">__x</span>) : 
   <span class='type-constructor'>string</span>)
-module Arr = Belt.Array
 let <span class='pattern-ident' data-type="(array(string), array(string)) => string">createDefnList</span> (headers : <span class='type-constructor'>string</span> <span class='type-constructor'>array</span>) (cells : <span class='type-constructor'>string</span> <span class='type-constructor'>array</span>) =
   (let rec <span class='pattern-ident' data-type="(string, int) => string">helper</span> (acc : <span class='type-constructor'>string</span>) (n : <span class='type-constructor'>int</span>) =
-     (if <span class='ident' data-type="int">n</span> <span class='operator' data-type="(int, int) => bool">=</span> (<span class='ident' data-type="array(string) => int">Arr.length</span> <span class='ident' data-type="array(string)">headers</span>)
+     (if <span class='ident' data-type="int">n</span> <span class='operator' data-type="(int, int) => bool">=</span> (<span class='ident' data-type="array(string) => int">Belt.Array.length</span> <span class='ident' data-type="array(string)">headers</span>)
       then <span class='ident' data-type="string">acc</span>
       else
         <span class='ident' data-type="(string, int) => string">helper</span>
@@ -507,25 +572,50 @@ let <span class='pattern-ident' data-type="(array(string), array(string)) => str
           <span class='ident' data-type="int">n</span> <span class='operator' data-type="(int, int) => int">+</span> <span class='int' data-type="int">1</span>) : <span class='type-constructor'>string</span>) in
    ((&quot;&lt;dl&gt;&quot;)[@reason.raw_literal &quot;&lt;dl&gt;&quot;]) <span class='operator' data-type="(string, string) => string">^</span>
      ((<span class='ident' data-type="(string, int) => string">helper</span> <span class='string' data-type="string">&quot;&quot;</span> <span class='int' data-type="int">0</span>) <span class='operator' data-type="(string, string) => string">^</span> ((&quot;&lt;/dl&gt;\n\n&quot;)[@reason.raw_literal &quot;&lt;/dl&gt;\\n\\n&quot;])) : 
+  <span class='type-constructor'>string</span>)
+let <span class='pattern-ident' data-type="(array(string), array(array(string))) => string">processRows</span> (headers : <span class='type-constructor'>string</span> <span class='type-constructor'>array</span>) (rows : <span class='type-constructor'>string</span> <span class='type-constructor'>array</span> <span class='type-constructor'>array</span>) =
+  (let <span class='pattern-ident' data-type="array(string) => string">helperFcn</span> = <span class='ident' data-type="(array(string), array(string)) => string">createDefnList</span> <span class='ident' data-type="array(string)">headers</span> in
+   (<span class='ident' data-type="(
+  array(array(string)),
+  array(string) => string
+) => Js.Array.t(string)">Belt.Array.map</span> <span class='ident' data-type="array(array(string))">rows</span> <span class='ident' data-type="array(string) => string">helperFcn</span>) |.
+     (fun <span class='pattern-ident' data-type="Js.Array.t(string)">__x</span>  -&gt;
+        <span class='ident' data-type="(string, Js.Array.t(string)) => string">Js.Array.joinWith</span> ((&quot;&lt;hr /&gt;\n&quot;)[@reason.raw_literal &quot;&lt;hr /&gt;\\n&quot;]) <span class='operator' data-type="Js.Array.t(string)">__x</span>) : 
   <span class='type-constructor'>string</span>)</code></pre>
   
   
   
 </div>
 
-<p>The keyword <code>rec</code> allows me to do recursive call. If the index <code>n</code> is at the end of the array, the function returns the accumulator. Otherwise, it calls the helper function recursively with a new accumulator (the old value plus a <code>&lt;dt&gt;..&lt;/dt&gt;</code> and <code>&lt;dd&gt;..&lt;/dd&gt;</code> for the current cell) and the next index value (<code>n + 1</code>).</p>
-<p>Notice that ReasonML has syntactic sugar that lets me write <code>headers[n]</code> instead of having to say <code>Array.get(headers, n)</code>. That’s the built-in <code>Array</code> module, not <code>Belt.Array</code>, by the way. The function raises an exception if the index is out of bounds.</p>
-<p>Now I can (finally) process all the rows in the array. My plan is to use <code>Belt.Array.map()</code> to apply <code>createDefnList()</code> to each of the rows in <code>contentRows</code>, which will give me an array of <code>&lt;dl&gt;...&lt;/dl&gt;</code> strings that I can join with <code>&lt;hr/&gt;</code> to visually separate them.  There’s just one problem: the function you give to <code>map()</code> can only have one parameter: the item from the array being processed, and <code>createDefnList()</code> has two parameters: The headers and the contents. There is a solution: <em>currying</em>. All functions in ReasonML are automatically curried—if you call them with fewer parameters than they specify, instead of giving you an error, the function returns a new function with the parameters you supplied “filled in.”  Look at this code:</p>
+<p>The right hand side of <code>let helper = createDefnList(headers);</code> calls the <code>createDefnList()</code> function with just the first parameters. The return value, which will be bound to the value <code>helperFcn</code>, is a function that has one argument already supplied, so it needs only one parameter to do its job—and that fulfill’s <code>map()</code>’s requirement for a function that has only one parameter.</p>
+<p>When <code>processRows()</code> is finished, it will return one very long string that consists of <code>&lt;dl&gt;..&lt;/dl&gt;&lt;hr/&gt;</code>s, one for every row in the CSV file.</p>
+<a href="#finishing-the-task" id="finishing-the-task"><h2>Finishing the Task</h2></a>
+
+<p>To wrap everything up, I sandwiched the <code>processRows()</code> call between strings that provide the HTML header and ending tags, and then used <code>writeFileAsUtf8Sync()</code> to send that to the output file. The <code>{js|...|js}</code> notation lets you have multi-line strings in ReasonML. You also use this notation if you have non-ASCII characters in your strings.</p>
 <div class='code-block' data-block-syntax="re">
   
-  <pre class='code' data-block-id='0' id='block-0'><code>let <span class='pattern-ident' data-type="(array(string), array(array(string))) => string">processRows</span> = (headers: <span class='type-constructor'>array</span>(<span class='type-constructor'>string</span>), rows: <span class='type-constructor'>array</span>(<span class='type-constructor'>array</span>(<span class='type-constructor'>string</span>))) : <span class='type-constructor'>string</span> =&gt; {
-  let <span class='pattern-ident' data-type="array(string) => string">helperFcn</span> = <span class='ident' data-type="(array(string), array(string)) => string">createDefnList</span>(<span class='ident' data-type="array(string)">headers</span>);
-  <span class='ident' data-type="(
-  array(array(string)),
-  array(string) => string
-) => Js.Array.t(string)">Arr.map</span>(<span class='ident' data-type="array(array(string))">rows</span>, <span class='ident' data-type="array(string) => string">helperFcn</span>) |.
-    <span class='ident' data-type="(string, Js.Array.t(string)) => string">Js.Array.joinWith</span>(<span class='string' data-type="string">&quot;&lt;hr /&gt;\n&quot;</span>, <span class='pattern-ident' data-type="Js.Array.t(string)"><span class='operator' data-type="Js.Array.t(string)">_</span></span>);
-};</code></pre>
+  <pre class='code' data-block-id='0' id='block-0'><code>let <span class='pattern-ident' data-type="string">htmlHeader</span> = <span class='string' data-type="string">{js|
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;title&gt;Feedback from European Dojo&lt;/title&gt;
+  &lt;meta http-equiv=&quot;Content-Type&quot; content=&quot;text/html; charset=utf-8&quot; /&gt;
+  &lt;style type=&quot;text/css&quot;&gt;
+  body {font-family: helvetica, arial, sans-serif; }
+  dl {
+    margin: 0.5em 0;
+  }
+  dt { color: #666; }
+  dd { margin-bottom: 0.5em; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+|js}</span>;
+
+let <span class='pattern-ident' data-type="string">htmlString</span> = (<span class='ident' data-type="string">htmlHeader</span> <span class='operator' data-type="(string, string) => string">++</span> <span class='ident' data-type="(array(string), array(array(string))) => string">processRows</span>(<span class='ident' data-type="array(string)">headers</span>, <span class='ident' data-type="array(array(string))">contentRows</span>) <span class='operator' data-type="(string, string) => string">++</span>
+  <span class='string' data-type="string">{js|&lt;/body&gt;\n&lt;/html&gt;|js}</span>);
+
+let _ = <span class='ident' data-type="(string, string) => unit">Node.Fs.writeFileAsUtf8Sync</span>(<span class='ident' data-type="string">outFile</span>, <span class='ident' data-type="string">htmlString</span>);</code></pre>
   
   
   
@@ -553,10 +643,9 @@ let <span class='pattern-ident' data-type="string => string">processCell</span> 
           ([%<span class='type-constructor'><span class='ident' data-type="string => Js.Re.t">re</span></span> ((&quot;/\\n/g&quot;)[@reason.raw_literal &quot;/\\\\n/g&quot;])])
           ((&quot;&lt;/div&gt;&lt;div&gt;&quot;)[@reason.raw_literal &quot;&lt;/div&gt;&lt;div&gt;&quot;]) <span class='operator' data-type="Js.String.t">__x</span>) : 
   <span class='type-constructor'>string</span>)
-module Arr = Belt.Array
 let <span class='pattern-ident' data-type="(array(string), array(string)) => string">createDefnList</span> (headers : <span class='type-constructor'>string</span> <span class='type-constructor'>array</span>) (cells : <span class='type-constructor'>string</span> <span class='type-constructor'>array</span>) =
   (let rec <span class='pattern-ident' data-type="(string, int) => string">helper</span> (acc : <span class='type-constructor'>string</span>) (n : <span class='type-constructor'>int</span>) =
-     (if <span class='ident' data-type="int">n</span> <span class='operator' data-type="(int, int) => bool">=</span> (<span class='ident' data-type="array(string) => int">Arr.length</span> <span class='ident' data-type="array(string)">headers</span>)
+     (if <span class='ident' data-type="int">n</span> <span class='operator' data-type="(int, int) => bool">=</span> (<span class='ident' data-type="array(string) => int">Belt.Array.length</span> <span class='ident' data-type="array(string)">headers</span>)
       then <span class='ident' data-type="string">acc</span>
       else
         <span class='ident' data-type="(string, int) => string">helper</span>
@@ -578,21 +667,57 @@ let <span class='pattern-ident' data-type="(array(string), array(array(string)))
    (<span class='ident' data-type="(
   array(array(string)),
   array(string) => string
-) => Js.Array.t(string)">Arr.map</span> <span class='ident' data-type="array(array(string))">rows</span> <span class='ident' data-type="array(string) => string">helperFcn</span>) |.
+) => Js.Array.t(string)">Belt.Array.map</span> <span class='ident' data-type="array(array(string))">rows</span> <span class='ident' data-type="array(string) => string">helperFcn</span>) |.
      (fun <span class='pattern-ident' data-type="Js.Array.t(string)">__x</span>  -&gt;
         <span class='ident' data-type="(string, Js.Array.t(string)) => string">Js.Array.joinWith</span> ((&quot;&lt;hr /&gt;\n&quot;)[@reason.raw_literal &quot;&lt;hr /&gt;\\n&quot;]) <span class='operator' data-type="Js.Array.t(string)">__x</span>) : 
-  <span class='type-constructor'>string</span>)</code></pre>
-  
-  
-  
-</div>
-
-<p>The right hand side of <code>let helper = createDefnList(headers);</code> calls the <code>createDefnList()</code> function with just the first parameters. The return value, which will be bound to the value <code>helperFcn</code>, is a function that has one argument already supplied, so it needs only one parameter to do its job—and that fulfill’s <code>map()</code>’s requirement for a function that has only one parameter.</p>
-<p>When <code>processRows()</code> is finished, it will return one very long string that consists of <code>&lt;dl&gt;..&lt;/dl&gt;&lt;hr/&gt;</code>s, one for every row in the CSV file.</p>
-<a href="#finishing-the-task" id="finishing-the-task"><h2>Finishing the Task</h2></a>
-
-<p>To wrap everything up, I sandwiched the <code>processRows()</code> call between strings that provide the HTML header and ending tags, and then used <code>writeFileAsUtf8Sync()</code> to send that to the output file. The <code>{js|...|js}</code> notation lets you have multi-line strings in ReasonML. You also use this notation if you have non-ASCII characters in your strings.</p>
-<pre class='code-txt txt'><code class='txt'>let htmlHeader = {js|
+  <span class='type-constructor'>string</span>)
+module Error =
+  struct
+    type <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>t</span></span></span></span></span> =
+      {
+      type_: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>string</span></span></span>[@bs.as ((&quot;type&quot;)[@reason.raw_literal &quot;type&quot;])];
+      code: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>string</span></span></span>;
+      message: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>string</span></span></span>;
+      row: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>int</span></span></span>;}[@@bs.deriving abstract]
+  end
+module Meta =
+  struct
+    type <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'><span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>t</span></span></span></span></span></span> =
+      {
+      delimiter: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>string</span></span></span>;
+      linebreak: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>string</span></span></span>;
+      aborted: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>bool</span></span></span>;
+      fields: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>string</span></span></span> <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>array</span></span></span>;
+      truncated: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>bool</span></span></span>;}[@@bs.deriving abstract]
+  end
+module Results =
+  struct
+    type <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>t</span></span></span></span> = {
+      data: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>string</span></span></span> <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>array</span></span></span> <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>array</span></span></span>;
+      error: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>Error.t</span></span></span> <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>array</span></span></span>;
+      meta: <span class='type-constructor'><span class='type-constructor'><span class='type-constructor'>Meta.t</span></span></span>;}[@@bs.deriving abstract]
+  end
+external parse : <span class='type-constructor'>string</span> -&gt; <span class='type-constructor'>Results.t</span> = &quot;parse&quot;[@@bs.val ][@@bs.module
+                                                           ((&quot;papaparse&quot;)
+                                                             [@reason.raw_literal
+                                                               &quot;papaparse&quot;])]
+let <span class='pattern-ident' data-type="array(string)">args</span> = <span class='ident' data-type="array(string)">Node.Process.argv</span>
+let <span class='pattern-ident' data-type="string">outFile</span> = <span class='ident' data-type="(array(string), int) => string">Belt.Array.getUnsafe</span> <span class='ident' data-type="array(string)">args</span> ((<span class='ident' data-type="array(string) => int">Belt.Array.length</span> <span class='ident' data-type="array(string)">args</span>) <span class='operator' data-type="(int, int) => int">-</span> <span class='int' data-type="int">1</span>)
+let <span class='pattern-ident' data-type="string">inFile</span> = <span class='ident' data-type="(array(string), int) => string">Belt.Array.getUnsafe</span> <span class='ident' data-type="array(string)">args</span> ((<span class='ident' data-type="array(string) => int">Belt.Array.length</span> <span class='ident' data-type="array(string)">args</span>) <span class='operator' data-type="(int, int) => int">-</span> <span class='int' data-type="int">2</span>)
+let <span class='pattern-ident' data-type="string">allLines</span> = <span class='ident' data-type="string => string">Node.Fs.readFileAsUtf8Sync</span> <span class='ident' data-type="string">inFile</span>
+let <span class='pattern-ident' data-type="array(array(string))">parseData</span> = <span class='ident' data-type="Results.t => array(array(string))">Results.data</span> (<span class='ident' data-type="string => Results.t">parse</span> <span class='ident' data-type="string">allLines</span>)
+let <span class='pattern-ident' data-type="array(string)">headers</span> =
+  (<span class='ident' data-type="(array(array(string)), ~offset: int, ~len: int) => array(
+  array(string)
+)">Belt.Array.slice</span> <span class='ident' data-type="array(array(string))">parseData</span> ~offset:<span class='int' data-type="int">0</span> ~len:<span class='int' data-type="int">1</span>) |.
+    (fun <span class='pattern-ident' data-type="array(array(string))">__x</span>  -&gt; <span class='ident' data-type="(array(array(string)), int) => array(string)">Belt.Array.getUnsafe</span> <span class='operator' data-type="array(array(string))">__x</span> <span class='int' data-type="int">0</span>)
+let <span class='pattern-ident' data-type="array(array(string))">contentRows</span> =
+  <span class='ident' data-type="(array(array(string)), ~offset: int, ~len: int) => array(
+  array(string)
+)">Belt.Array.slice</span> <span class='ident' data-type="array(array(string))">parseData</span> ~offset:<span class='int' data-type="int">1</span>
+    ~len:((<span class='ident' data-type="array(array(string)) => int">Belt.Array.length</span> <span class='ident' data-type="array(array(string))">parseData</span>) <span class='operator' data-type="(int, int) => int">-</span> <span class='int' data-type="int">1</span>)
+let <span class='pattern-ident' data-type="string">htmlHeader</span> =
+  <span class='string' data-type="string">{js|
 &lt;!DOCTYPE html&gt;
 &lt;html&gt;
 &lt;head&gt;
@@ -608,13 +733,16 @@ let <span class='pattern-ident' data-type="(array(string), array(array(string)))
   &lt;/style&gt;
 &lt;/head&gt;
 &lt;body&gt;
-|js};
+|js}</span>
+let <span class='pattern-ident' data-type="string">htmlString</span> =
+  <span class='ident' data-type="string">htmlHeader</span> <span class='operator' data-type="(string, string) => string">^</span> ((<span class='ident' data-type="(array(string), array(array(string))) => string">processRows</span> <span class='ident' data-type="array(string)">headers</span> <span class='ident' data-type="array(array(string))">contentRows</span>) <span class='operator' data-type="(string, string) => string">^</span> <span class='string' data-type="string">{js|&lt;/body&gt;\n&lt;/html&gt;|js}</span>)
+let _ = <span class='ident' data-type="(string, string) => unit">Node.Fs.writeFileAsUtf8Sync</span> <span class='ident' data-type="string">outFile</span> <span class='ident' data-type="string">htmlString</span></code></pre>
+  
+  
+  
+</div>
 
-let htmlString = (htmlHeader ++ processRows(headers, contentRows) ++
-  {js|&lt;/body&gt;\n&lt;/html&gt;|js});
-
-let _ = Node.Fs.writeFileAsUtf8Sync(outFile, htmlString);</code></pre>
-
+<p>In the last line, I didn’t need the return value from the file write, so I bound it to <code>_</code>, which is ignored.</p>
 <a href="#conclusion" id="conclusion"><h2>Conclusion</h2></a>
 
 <p>There you have it, a modest but useful program. Here are the concepts I needed:</p>

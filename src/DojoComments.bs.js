@@ -64,9 +64,6 @@ var htmlString = htmlHeader + (processRows(headers, contentRows) + "</body>\n</h
 
 Fs.writeFileSync(outFile, htmlString, "utf8");
 
-var Arr = 0;
-
-exports.Arr = Arr;
 exports.$$Error = $$Error;
 exports.Meta = Meta;
 exports.Results = Results;

@@ -25,20 +25,21 @@ node src/DojoComments.bs.js inputfile.csv outputfile.html
 
 ## Reading Command Line Arguments
 
-To read command line arguments, you need access to Node’s `process` global. ReasonML provides an [interface to `process`](https://bucklescript.github.io/bucklescript/api/Node_process.html) via BuckleScript. The `argv` variable gives me an array of command line arguments. For this program, the last element in the array is the output file name, and the next to last is the input file name. Current best practice in ReasonML is to use the `Belt.Array` module to manipulate arrays. I suspected I would be doing a lot of calls to functions from that module, and I didn’t want to type `Belt.Array` all the time, so I used a module alias at the top of my code:
+To read command line arguments, you need access to Node’s `process` global. ReasonML provides an [interface to `process`](https://bucklescript.github.io/bucklescript/api/Node_process.html) via BuckleScript. The `argv` variable gives me an array of command line arguments. For this program, the last element in the array is the output file name, and the next to last is the input file name. Current best practice in ReasonML is to use the `Belt.Array` module to manipulate arrays.
 
-```reason;shared(arr)
-module Arr = Belt.Array;
-```
-and later on in the code:
-
-```reason;use(arr);shared(args);
+```reason;shared(args);
 let args = Node.Process.argv;
-let outFile = Arr.getUnsafe(args, Arr.length(args) - 1);
-let inFile = Arr.getUnsafe(args, Arr.length(args) - 2);
+let outFile = Belt.Array.getUnsafe(args, Belt.Array.length(args) - 1);
+let inFile = Belt.Array.getUnsafe(args, Belt.Array.length(args) - 2);
 ```
 
 This is where (not for the first time during this program) I got lazy. `Belt.Array.get()` returns `option` type, and I really didn’t want to deal with that, so I went with `getUnsafe()`, which means that if you don’t provide enough arguments to the program, it will crash.
+
+Note: If you get tired of typing `Belt.Array` repeatedly, you can use a *module alias*:
+
+```reason
+module Arr = Belt.Array;
+```
 
 ## Reading the Input File
 
@@ -140,8 +141,9 @@ Note the function call `Results.data(...)` in the last line. When you created th
 I used `Belt.Array.slice()` to separate it into two arrays of arrays; the first one containing only the headers, and the second containing the remaining rows:
 
 ```reason;use(parseData);shared(splitArr)
-let headers = Arr.slice(parseData, ~offset=0, ~len=1) |. Arr.getUnsafe(_,0);
-let contentRows = Arr.slice(parseData, ~offset=1, ~len=Arr.length(parseData) - 1);
+let headers = Belt.Array.slice(parseData, ~offset=0, ~len=1) |.
+  Belt.Array.getUnsafe(_,0);
+let contentRows = Belt.Array.slice(parseData, ~offset=1, ~len=Belt.Array.length(parseData) - 1);
 ```
 
 Take a closer look at the first line. First, `slice()` has *named parameters*. Instead of me having to remember the order of the parameters, and which number comes first—the offset or the length—named parameters let me specify the parameters in any order I please, and the names tell me who’s who and what’s what. The first call splits off the first array in `parseData`, returning an array of arrays that happens to have only one entry:
@@ -155,7 +157,8 @@ Take a closer look at the first line. First, `slice()` has *named parameters*. I
 but I want only a simple array, so I had to pass that result to `getUnsafe()` to extract the first (and only) sub-array. The [*fast pipe*](https://bucklescript.github.io/docs/en/fast-pipe.html) operator `|.` sends the value on the left to fill in the `_` in the next call. You will often see people using fast pipe instead of nested function calls like this:
 
 ```txt
-let headers = Arr.getUnsafe(Arr.slice(parseData, ~offset=0, ~len=1), 0);
+let headers = Belt.Array.getUnsafe(
+  Belt.Array.slice(parseData, ~offset=0, ~len=1), 0);
 ```
 
 The second line that slices off the `contentRows` is fine as it is; I *want* an array of arrays here.
@@ -179,11 +182,11 @@ let processCell = (s: string) : string => {
 
 Now I can create a definition list from an array of headers and a row’s worth of cells. I couldn’t use `Belt.Array.reduce()` because I have two arrays to traverse, not one. There is a function `Belt.Array.reduceReverse2()`, which *can* handle two parallel arrays, but it iterates from the end to the beginning. I decided it would be simpler to write a recursive helper function that has two arguments: an accumulated string `acc` and an index number `n`:
 
-```reason;use(processCell);use(arr);shared(createDL)
+```reason;use(processCell);shared(createDL)
 let createDefnList = (headers: array(string), cells: array(string)) : string => {
 
   let rec helper = (acc: string, n: int) : string => {
-    if (n == Arr.length(headers)) {
+    if (n == Belt.Array.length(headers)) {
       acc
     } else {
       helper(acc ++ "<dt>" ++ headers[n] ++ "</dt>\n<dd><div>"
@@ -204,7 +207,7 @@ Now I can (finally) process all the rows in the array. My plan is to use `Belt.A
 ```reason;use(createDL);shared(processRows)
 let processRows = (headers: array(string), rows: array(array(string))) : string => {
   let helperFcn = createDefnList(headers);
-  Arr.map(rows, helperFcn) |.
+  Belt.Array.map(rows, helperFcn) |.
     Js.Array.joinWith("<hr />\n", _);
 };
 ```
@@ -217,7 +220,7 @@ When `processRows()` is finished, it will return one very long string that consi
 
 To wrap everything up, I sandwiched the `processRows()` call between strings that provide the HTML header and ending tags, and then used `writeFileAsUtf8Sync()` to send that to the output file. The `{js|...|js}` notation lets you have multi-line strings in ReasonML. You also use this notation if you have non-ASCII characters in your strings.
 
-```txt
+```re;use(processRows);use(splitArr);
 let htmlHeader = {js|
 <!DOCTYPE html>
 <html>
@@ -241,6 +244,8 @@ let htmlString = (htmlHeader ++ processRows(headers, contentRows) ++
 
 let _ = Node.Fs.writeFileAsUtf8Sync(outFile, htmlString);
 ```
+
+In the last line, I didn’t need the return value from the file write, so I bound it to `_`, which is ignored.
 
 ## Conclusion
 

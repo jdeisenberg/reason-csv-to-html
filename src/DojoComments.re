@@ -1,7 +1,3 @@
-/* https://bucklescript.github.io/docs/en/function.html#trick-2-polymorphic-variant-bsunwrap */
-
-module Arr = Belt.Array;
-
 module Error = {
    [@bs.deriving abstract] type t = {
     [@bs.as "type"]  type_: string,
@@ -46,7 +42,7 @@ let processCell = (s: string) : string => {
  */
 let createDefnList = (headers: array(string), cells: array(string)) : string => {
   let rec helper = (acc: string, n: int) : string => {
-    if (n == Arr.length(headers)) {
+    if (n == Belt.Array.length(headers)) {
       acc
     } else {
       helper(acc ++ "<dt>" ++ headers[n] ++ "</dt>\n<dd><div>"
@@ -62,13 +58,13 @@ let processRows = (headers: array(string), rows: array(array(string))) : string 
    * that way, it can be used with map
    */
   let helper = createDefnList(headers);
-  Arr.map(rows, helper) |.
+  Belt.Array.map(rows, helper) |.
     Js.Array.joinWith("<hr />\n", _);
 };
 
 let args = Node.Process.argv;
-let outFile = Arr.getUnsafe(args, Arr.length(args) - 1);
-let inFile = Arr.getUnsafe(args, Arr.length(args) - 2);
+let outFile = Belt.Array.getUnsafe(args, Belt.Array.length(args) - 1);
+let inFile = Belt.Array.getUnsafe(args, Belt.Array.length(args) - 2);
 
 /* Read the entire CSV file as one string */
 let allLines = Node.Fs.readFileAsUtf8Sync(inFile);
@@ -76,8 +72,8 @@ let allLines = Node.Fs.readFileAsUtf8Sync(inFile);
 /* Parse the CSV  string  */
 let parseData = Results.data(parse(allLines));
 
-let headers = Arr.slice(parseData, ~offset=0, ~len=1) |. Arr.getUnsafe(_,0);
-let contentRows = Arr.slice(parseData, ~offset=1, ~len=Arr.length(parseData) - 1);
+let headers = Belt.Array.slice(parseData, ~offset=0, ~len=1) |. Belt.Array.getUnsafe(_,0);
+let contentRows = Belt.Array.slice(parseData, ~offset=1, ~len=Belt.Array.length(parseData) - 1);
 
 let htmlHeader = {js|
 <!DOCTYPE html>
