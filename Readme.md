@@ -1,4 +1,4 @@
-# Converting CSV to HTML
+# Using ReasonML to Convert CSV to HTML
 
 Recently, [@bsansouci](https://github.com/bsansouci) organized a ReasonML dojo that was held simultaneously in several locations in Europe. He provided a feedback form for attendees and put the results in a Google document, which looks like this:
 
