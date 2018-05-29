@@ -154,7 +154,7 @@ Take a closer look at the first line. First, `slice()` has *named parameters*. I
 |]
 ```
 
-but I want only a simple array, so I had to pass that result to `getUnsafe()` to extract the first (and only) sub-array. The *fast pipe* operator `|.` sends the value on the left to fill in the `_` in the next call. You will often see people using fast pipe instead of nested function calls like this:
+but I want only a simple array, so I had to pass that result to `getUnsafe()` to extract the first (and only) sub-array. The [*fast pipe*](https://bucklescript.github.io/docs/en/fast-pipe.html) operator `|.` sends the value on the left to fill in the `_` in the next call. You will often see people using fast pipe instead of nested function calls like this:
 
 ```txt
 let headers = Arr.getUnsafe(Arr.slice(parseData, ~offset=0, ~len=1), 0);

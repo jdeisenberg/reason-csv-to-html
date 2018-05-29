@@ -406,7 +406,7 @@ let <span class='pattern-ident' data-type="array(array(string))">contentRows</sp
   [|&quot;Timestamp&quot;, &quot;Which dojo did you attend?&quot;, &quot;Any previous programming experience&quot;...|]
 |]</code></pre>
 
-<p>but I want only a simple array, so I had to pass that result to <code>getUnsafe()</code> to extract the first (and only) sub-array. The <em>fast pipe</em> operator <code>|.</code> sends the value on the left to fill in the <code>_</code> in the next call. You will often see people using fast pipe instead of nested function calls like this:</p>
+<p>but I want only a simple array, so I had to pass that result to <code>getUnsafe()</code> to extract the first (and only) sub-array. The <a href="https://bucklescript.github.io/docs/en/fast-pipe.html" target="_blank" rel="noopener nofollow" title="" class="external-link"><em>fast pipe</em></a> operator <code>|.</code> sends the value on the left to fill in the <code>_</code> in the next call. You will often see people using fast pipe instead of nested function calls like this:</p>
 <pre class='code-txt txt'><code class='txt'>let headers = Arr.getUnsafe(Arr.slice(parseData, ~offset=0, ~len=1), 0);</code></pre>
 
 <p>The second line that slices off the <code>contentRows</code> is fine as it is; I <em>want</em> an array of arrays here.</p>
