@@ -84,6 +84,24 @@ let inFile = Arr.getUnsafe(args, Arr.length(args) - 2);
 /* Read the entire CSV file as one string */
 let allLines = Node.Fs.readFileAsUtf8Sync(inFile);
 
+let htmlHeader = {js|
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Feedback from European Dojo</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <style type="text/css">
+  body {font-family: helvetica, arial, sans-serif; }
+  dl {
+    margin: 0.5em 0;
+  }
+  dt { color: #666; }
+  dd { margin-bottom: 0.5em; }
+  </style>
+</head>
+<body>
+|js};
+
 /* Parse the CSV  string  */
 let parseData = Results.data(parse(allLines));
 
