@@ -179,7 +179,7 @@ let processCell = (s: string) : string => {
 > I have fully annotated the parameter and return types for `processCell()`. You will normally not see ReasonML programmers doing this; they will let ReasonML’s type inference engine do the work for them. So why am I doing this extra work?
 > I have, for many years, taught beginning programming courses. Sometimes, I am in the middle of explaining some program that I am live coding, and I stop and tell the class, “I am not explaining how I am writing this to convince you. I’m doing it to convince *me*.” And that’s why I am fully annotating the types for all my functions: to convince myself that I know exactly what kind of data is coming into and going out of my functions. Your Mileage May Vary.  
 
-Now I can create a definition list from an array of headers and a row’s worth of cells. I could use `Belt.Array.Reduce`, but it seemed easier to use a recursive helper function to accumulate a string `acc` from cell index `n`:
+Now I can create a definition list from an array of headers and a row’s worth of cells. I couldn’t use `Belt.Array.reduce()` because I have two arrays to traverse, not one. There is a function `Belt.Array.reduceReverse2()`, which *can* handle two parallel arrays, but it iterates from the end to the beginning. I decided it would be simpler to write a recursive helper function that has two arguments: an accumulated string `acc` and an index number `n`:
 
 ```reason;use(processCell);use(arr);shared(createDL)
 let createDefnList = (headers: array(string), cells: array(string)) : string => {
@@ -197,9 +197,9 @@ let createDefnList = (headers: array(string), cells: array(string)) : string => 
 };
 ```
 
-The keyword `rec` allows me to do recursive call. If the index `n` is at the end of the array, the function returns the accumulator. Otherwise, it calls the helper function recursively with a new accumulator (the old value plus a new `<dt>..</dt>` and `<dd>..</dd>`) and the next index value (`n + 1`).
+The keyword `rec` allows me to do recursive call. If the index `n` is at the end of the array, the function returns the accumulator. Otherwise, it calls the helper function recursively with a new accumulator (the old value plus a `<dt>..</dt>` and `<dd>..</dd>` for the current cell) and the next index value (`n + 1`).
 
-Notice that ReasonML has syntactic sugar that lets me write `headers[n]` instead of having to say `Array.get(headers, n)`. That’s the built-in `Array` module, not `Belt.Array`, by the way.
+Notice that ReasonML has syntactic sugar that lets me write `headers[n]` instead of having to say `Array.get(headers, n)`. That’s the built-in `Array` module, not `Belt.Array`, by the way. The function raises an exception if the index is out of bounds.
 
 Now I can (finally) process all the rows in the array. My plan is to use `Belt.Array.map()` to apply `createDefnList()` to each of the rows in `contentRows`, which will give me an array of `<dl>...</dl>` strings that I can join with `<hr/>` to visually separate them.  There’s just one problem: the function you give to `map()` can only have one parameter: the item from the array being processed, and `createDefnList()` has two parameters: The headers and the contents. There is a solution: *currying*. All functions in ReasonML are automatically curried—if you call them with fewer parameters than they specify, instead of giving you an error, the function returns a new function with the parameters you supplied “filled in.”  Look at this code:
 
